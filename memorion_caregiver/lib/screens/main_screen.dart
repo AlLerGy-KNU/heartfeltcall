@@ -4,6 +4,7 @@ import 'package:memorion_caregiver/components/tag.dart';
 import 'package:memorion_caregiver/const/colors.dart';
 import 'package:memorion_caregiver/const/other.dart';
 import 'package:memorion_caregiver/screens/add_career_screen.dart';
+import 'package:memorion_caregiver/screens/more_screen.dart';
 
 class MainScreen extends StatefulWidget {
   @override
@@ -62,7 +63,7 @@ class _MainScreenState extends State<MainScreen> {
             return Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => MoreScreen(name: person["name"]!, id: "ASDF"))),
                 style: ButtonStyle(
                   backgroundColor: WidgetStatePropertyAll(AppColors.whiteMain),
                   padding: WidgetStatePropertyAll(EdgeInsets.all(Other.marginS)),
