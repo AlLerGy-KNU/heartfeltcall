@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:memorion_caregiver/const/other.dart';
-import 'package:memorion_caregiver/screens/main_screen.dart';
 
 class EditCareerScreen extends StatefulWidget {
   @override

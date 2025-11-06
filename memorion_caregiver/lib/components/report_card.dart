@@ -3,7 +3,6 @@ import 'package:memorion_caregiver/components/tag.dart';
 import 'package:memorion_caregiver/const/colors.dart';
 import 'package:memorion_caregiver/const/other.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
-import 'package:syncfusion_flutter_charts/sparkcharts.dart';
 
 Widget reportCard(String title, String info, String tag, context) {
   return Container(
