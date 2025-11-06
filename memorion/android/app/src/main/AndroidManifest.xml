@@ -3,7 +3,7 @@
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT"/>
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <application
-        android:label="memorion"
+        android:label="따듯한전화"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <receiver
