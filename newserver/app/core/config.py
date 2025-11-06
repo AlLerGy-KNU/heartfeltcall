@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     # Global questions root (shared question WAVs)
     questions_root: str = Field(default="q", alias="QUESTIONS_ROOT")
 
+    # AI model paths (optional)
+    mci_model_path: str | None = Field(default=None, alias="MCI_MODEL_PATH")
+
     class Config:
         env_file = ".env"
         case_sensitive = True

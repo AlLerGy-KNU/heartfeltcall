@@ -31,7 +31,7 @@
                                                               },
                                                       "body":  {
                                                                    "mode":  "raw",
-                                                                   "raw":  "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@test.com\",\n  \"password\": \"pass123\",\n  \"phone\": \"+821012345678\"\n}"
+                                                                   "raw":  "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@test.com\",\n  \"password\": \"Abcdef!23456\",\n  \"phone\": \"+821012345678\"\n}"
                                                                }
                                                   },
                                       "response":  [
@@ -60,7 +60,7 @@
                                                               },
                                                       "body":  {
                                                                    "mode":  "raw",
-                                                                   "raw":  "{\n  \"email\": \"john@test.com\",\n  \"password\": \"pass123\"\n}"
+                                                                   "raw":  "{\n  \"email\": \"john@test.com\",\n  \"password\": \"Abcdef!23456\"\n}"
                                                                }
                                                   },
                                       "event":  [
@@ -537,6 +537,10 @@
                      },
                      {
                          "key":  "jwt",
+                         "value":  ""
+                     },
+                     {
+                         "key":  "dependent_token",
                          "value":  ""
                      },
                      {
