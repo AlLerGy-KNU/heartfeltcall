@@ -120,5 +120,12 @@ ThemeData themeData() {
         color: AppColors.gray,
       ),
     ),
+    dropdownMenuTheme: DropdownMenuThemeData(
+      // 드롭다운으로 펼쳐졌을 때 메뉴 박스 스타일
+      menuStyle: MenuStyle(
+        backgroundColor: WidgetStatePropertyAll(AppColors.white),
+        // elevation: const WidgetStatePropertyAll(0),
+      ),
+    ),
   );
 }

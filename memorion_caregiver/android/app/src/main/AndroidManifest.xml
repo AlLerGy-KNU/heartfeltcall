@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="memorion_caregiver"
+        android:label="따듯한전화: 보호자"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
