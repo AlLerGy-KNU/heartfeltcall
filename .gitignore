@@ -503,4 +503,6 @@ fabric.properties
 !/gradle/wrapper/gradle-wrapper.jar
 
 # End of https://www.toptal.com/developers/gitignore/api/python,macos,windows,android,androidstudio,visualstudiocode,flutter,dart
+
+### flutter lib add
 !memorion*/lib/
