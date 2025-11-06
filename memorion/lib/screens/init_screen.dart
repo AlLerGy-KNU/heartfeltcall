@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:memorion/components/button.dart';
-import 'package:memorion/const/colors.dart';
+import 'package:memorion/const/other.dart';
 import 'package:memorion/screens/home_screen.dart';
 import 'package:memorion/services/local_data_manager.dart';
 
@@ -18,16 +17,13 @@ class _InitScreenState extends State<InitScreen> {
   @override
   void initState() {
     super.initState();
-    // TODO: init data checker
     LocalDataManager.initData();
 
-    print("[DEGUB] test init data");
     localDataManager = LocalDataManager();
   }
 
   @override
   void dispose() {
-    // TODO: implement dispose
     super.dispose();
   }
 
@@ -40,16 +36,16 @@ class _InitScreenState extends State<InitScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             SizedBox(height: 40,),
-            Text("안녕하세요!\n앱을 사용하기 위해\n보호자와 연결해주세요.", style: TextStyle(
-              fontSize: 36, color: AppColors.black, fontWeight: FontWeight.bold
-            ),),
-            Spacer(),
-            bigButton(text: "연결코드 보내기", onPressed: ()=>{
-              Navigator.push(context, MaterialPageRoute(builder: (context) => HomeScreen(title: "test",)))
-            })
+            Text("안녕하세요!\n앱을 사용하기 위해\n보호자와 연결해주세요."),
           ],
         ),
-      )
+      ),
+      bottomNavigationBar: Padding(
+        padding: EdgeInsets.only(left: Other.margin, right: Other.margin, bottom: Other.margin),
+        child: ElevatedButton(child: Text("연결코드 보내기"), onPressed: ()=>{
+          Navigator.push(context, MaterialPageRoute(builder: (context) => HomeScreen()))
+        }),
+      ),
     );
   }
 }

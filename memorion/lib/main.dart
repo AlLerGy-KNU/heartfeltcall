@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:memorion/const/colors.dart';
+import 'package:memorion/const/theme.dart';
 import 'package:memorion/screens/init_screen.dart';
 import 'package:memorion/services/local_data_manager.dart';
 
@@ -17,9 +17,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Memorion',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: AppColors.main),
-      ),
+      theme: themeData(),
       home: InitScreen(),
     );
   }

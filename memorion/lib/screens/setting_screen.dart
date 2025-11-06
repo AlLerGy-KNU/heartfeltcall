@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:memorion/components/button.dart';
+import 'package:memorion/const/other.dart';
 import 'package:memorion/const/value_name.dart';
 import 'package:memorion/services/local_data_manager.dart';
 
@@ -29,7 +29,6 @@ class _SettingScreenState extends State<SettingScreen> {
 
   @override
   void dispose() {
-    // TODO: implement dispose
     super.dispose();
   }
 
@@ -58,8 +57,8 @@ class _SettingScreenState extends State<SettingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Padding(
-        padding: const EdgeInsets.all(32.0),
-        child: SizedBox.expand(
+        padding: const EdgeInsets.symmetric(horizontal:  32.0),
+        child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
@@ -75,7 +74,7 @@ class _SettingScreenState extends State<SettingScreen> {
                 "보호자 설정",
                 style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: AppColors.black),
               ),
-              bigButton(text: "보호자 연결 끊기", onPressed: ()=>{}, padding: 4, fontSize: 36),
+              ElevatedButton(child: Text("보호자 연결 끊기"), onPressed: ()=>{}),
               SizedBox(height: 40,),
               Text(
                 "글씨 크기",
@@ -86,33 +85,41 @@ class _SettingScreenState extends State<SettingScreen> {
                 mainAxisSize: MainAxisSize.max,
                 children: [
                   Expanded(
-                    child: bigButton(text: "줄이기", onPressed: ()=>{}, backgroundColor: AppColors.gray, fontSize: 36, padding: 4)
+                    child: ElevatedButton(child: Text("줄이기"), onPressed: ()=>{})
                   ),
                   SizedBox(width: 40,),
                   Expanded(
-                    child: bigButton(text: "키우기", onPressed: ()=>{}, backgroundColor: AppColors.main, fontSize: 36, padding: 4)
+                    child: ElevatedButton(child: Text("키우기"), onPressed: ()=>{})
                   ),
                 ],
               ),
-              Spacer(),
-              Row(
-                mainAxisSize: MainAxisSize.max,
-                children: [
-                  Expanded(
-                    child: bigButton(text: "저장\n하기", onPressed: ()=>{
-                      saveSetting(),
-                      Navigator.pop(context)
-                    }, backgroundColor: AppColors.main)
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: bigButton(text: "취소\n하기", onPressed: ()=>{
-                      Navigator.pop(context, )}, backgroundColor: AppColors.whiteGray, textColor: AppColors.black)
-                  ),
-                ],
-              ),
+              
             ],
           ),
+        ),
+      ),
+      bottomNavigationBar: Padding(
+        padding: EdgeInsets.only(right: Other.margin, left: Other.margin, bottom: Other.margin),
+        child: Row(
+          mainAxisSize: MainAxisSize.max,
+          children: [
+            Expanded(
+              child: ElevatedButton(child: Text("저장\n하기"), onPressed: ()=>{
+                saveSetting(),
+                Navigator.pop(context)
+              })
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: ElevatedButton(
+                style: Theme.of(context).elevatedButtonTheme.style?.copyWith(
+                  backgroundColor: WidgetStatePropertyAll(AppColors.whiteGray),
+                  foregroundColor: WidgetStatePropertyAll(AppColors.black)
+                ),
+                child: Text("취소\n하기",), onPressed: ()=>{
+                Navigator.pop(context, )})
+            ),
+          ],
         ),
       ),
     );
