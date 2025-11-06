@@ -17,10 +17,8 @@ class Analysis(Base):
         Integer,
         ForeignKey("calls.id", ondelete="CASCADE")
     )
-    state: Mapped[str | None] = mapped_column(
-        Enum("NORMAL", "MCI", "DEMENTIA", name="analysis_state"),
-        nullable=True
-    )
+    # 상태 점수(소수). 기본값 -1.0 (미분석)
+    state: Mapped[float] = mapped_column(Float, default=-1.0)
     risk_score: Mapped[float | None] = mapped_column(Float, nullable=True)
     graph_points: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     reasoning: Mapped[str | None] = mapped_column(Text, nullable=True)

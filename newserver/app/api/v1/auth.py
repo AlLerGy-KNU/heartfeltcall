@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_db, get_current_user
 from app.schemas.auth import SignupRequest, LoginRequest, TokenResponse, MeResponse
 from app.models.user import User
-from app.core.security import get_password_hash, verify_password, create_access_token
+from app.core.security import get_password_hash, verify_password, create_access_token, check_password_strength
 
 router = APIRouter()
 
@@ -11,7 +11,11 @@ router = APIRouter()
 def signup(data: SignupRequest, db: Session = Depends(get_db)):
     if db.query(User).filter(User.email == data.email).first():
         raise HTTPException(400, "Email already registered")
-    user = User(name=data.name, email=data.email, password_hash= get_password_hash(data.password), phone=data.phone, role="CAREGIVER")
+    try:
+        check_password_strength(data.password)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    user = User(name=data.name, email=data.email, password_hash=get_password_hash(data.password), phone=data.phone, role="CAREGIVER")
     db.add(user); db.commit(); db.refresh(user)
     return {"success": True, "user_id": user.id}
 

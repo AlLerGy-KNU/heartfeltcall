@@ -32,6 +32,7 @@ async def convert_to_melspectrogram(base_path):
     """Mel-Spectrogram 변환"""
     try:
         import librosa
+        import librosa.display  # ensure display submodule is available
         import matplotlib
         matplotlib.use('Agg')  # 화면 출력없이 파일 저장 가능하게 설정
         import matplotlib.pyplot as plt
@@ -77,7 +78,7 @@ async def convert_to_melspectrogram(base_path):
         return {"success": False, "message": f"Mel-Spectrogram 변환에 실패하였습니다: {e}"}
 
 async def load_and_test_models(base_path):
-    """모델 로딩 및 테스트"""
+    """모델 로딩 및 테스트 (MCIvsAD 모델만 사용)"""
     try:
         import tensorflow as tf
         from tensorflow.keras.applications import VGG16
@@ -85,10 +86,10 @@ async def load_and_test_models(base_path):
         from tensorflow.keras.preprocessing import image
         import h5py
 
-        # 모델 로딩 설정
+        # 모델 로딩 설정 (환경변수로 경로 지정 가능)
+        mci_model_path = os.getenv('MCI_MODEL_PATH', 'models/MCIvsADModel_68.7.h5')
         model_paths = [
-            ('MCIvsAD_68.7', 'models/MCIvsADModel_68.7.h5'),
-            ('SCIvsOTHERS_72.7', 'models/SCIvsOTHERModel_72.7.h5')
+            ('MCIvsAD', mci_model_path),
         ]
         loaded_models = {}
 
@@ -149,7 +150,8 @@ async def load_and_test_models(base_path):
 
                 # 예측 실행
                 prediction = model.predict(img_array, verbose=0)[0][0]
-                confidence = prediction * 100
+                # 0~1 스코어
+                score = float(prediction)
 
                 """
                 original_file = mel_file.replace('.jpg', '.wav')
@@ -166,14 +168,14 @@ async def load_and_test_models(base_path):
                 """
 
                 # 위험도 범주화
-                if prediction > 0.7:
+                if score > 0.7:
                     risk_level = "높은 위험도"
-                elif prediction > 0.4:
+                elif score > 0.4:
                     risk_level = "중간 위험도"
                 else:
                     risk_level = "낮은 위험도"
 
-                return {"success": True, "result": {"prediction": confidence, "risk_level": risk_level}}
+                return {"success": True, "result": {"score": score, "risk_level": risk_level}}
             except Exception as e:
                 return {"success": False, "message": f"{mel_path} 예측에 실패하였습니다: {e}"}
 
@@ -196,4 +198,5 @@ async def main(base_path):
     if not model_json["success"]:
         return model_json
 
-    return {"success": True, "result": model_json["result"]}
+    # mel 이미지 경로 포함
+    return {"success": True, "result": model_json["result"], "mel_path": mel_json.get("path")}
