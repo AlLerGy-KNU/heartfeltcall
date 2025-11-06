@@ -7,6 +7,8 @@ import 'package:memorion_caregiver/screens/add_career_screen.dart';
 import 'package:memorion_caregiver/screens/more_screen.dart';
 
 class MainScreen extends StatefulWidget {
+  const MainScreen({super.key});
+
   @override
   State<MainScreen> createState() => _MainScreenState();
 }
@@ -67,7 +69,6 @@ class _MainScreenState extends State<MainScreen> {
                 style: ButtonStyle(
                   backgroundColor: WidgetStatePropertyAll(AppColors.whiteMain),
                   padding: WidgetStatePropertyAll(EdgeInsets.all(Other.marginS)),
-                  elevation: const WidgetStatePropertyAll(0.0), // 그림자 제거
                   shape: WidgetStatePropertyAll(
                     RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
