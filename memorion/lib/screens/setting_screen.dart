@@ -63,33 +63,62 @@ class _SettingScreenState extends State<SettingScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              const SizedBox(height: 40,),
-              // logo
-              const Text(
-                '설정',
-                style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold, color: AppColors.black),
-              ),
-              const SizedBox(height: 20,),
+              SizedBox(height: Other.gapM,),
               Text(
-                "보호자 설정",
-                style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: AppColors.black),
+                '설정',
+                style: Theme.of(context).textTheme.bodyLarge,
               ),
-              ElevatedButton(child: Text("보호자 연결 끊기"), onPressed: ()=>{}),
-              SizedBox(height: 40,),
+              SizedBox(height: Other.gapS,),
+              Text(
+                "보호자 설정"
+              ),
+              SizedBox(height: Other.gapSS,),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: ()=>{},
+                      style: Theme.of(context).elevatedButtonTheme.style?.copyWith(
+                        padding: WidgetStatePropertyAll(EdgeInsets.all(8))
+                      ),
+                      child: Text("보호자 연결 끊기", style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        color: AppColors.white
+                      ),),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: Other.gapM,),
               Text(
                 "글씨 크기",
-                style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: AppColors.black),
               ),
-              SizedBox(height: 16,),
+              SizedBox(height: Other.gapSS,),
               Row(
                 mainAxisSize: MainAxisSize.max,
                 children: [
                   Expanded(
-                    child: ElevatedButton(child: Text("줄이기"), onPressed: ()=>{})
+                    child: ElevatedButton(
+                      onPressed: ()=>{},
+                      style: Theme.of(context).elevatedButtonTheme.style?.copyWith(
+                        backgroundColor: WidgetStatePropertyAll(AppColors.whiteGray),
+                        padding: WidgetStatePropertyAll(EdgeInsets.all(8))
+                      ),
+                      child: Text("줄이기", style: Theme.of(context).textTheme.bodyMedium,),  
+                    )
                   ),
-                  SizedBox(width: 40,),
+                  SizedBox(width: Other.gapS,),
                   Expanded(
-                    child: ElevatedButton(child: Text("키우기"), onPressed: ()=>{})
+                    child: ElevatedButton(
+                      onPressed: ()=>{},
+                      style: Theme.of(context).elevatedButtonTheme.style?.copyWith(
+                        backgroundColor: WidgetStatePropertyAll(AppColors.main),
+                        foregroundColor: WidgetStatePropertyAll(AppColors.white),
+                        padding: WidgetStatePropertyAll(EdgeInsets.all(8))
+                      ),
+                      child: Text("키우기", style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        color: AppColors.white
+                      ),),  
+                    )
                   ),
                 ],
               ),
@@ -109,7 +138,7 @@ class _SettingScreenState extends State<SettingScreen> {
                 Navigator.pop(context)
               })
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: Other.gapS,),
             Expanded(
               child: ElevatedButton(
                 style: Theme.of(context).elevatedButtonTheme.style?.copyWith(

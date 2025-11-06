@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:memorion/const/theme.dart';
 import 'package:memorion/screens/init_screen.dart';
 import 'package:memorion/services/local_data_manager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // 바인딩 초기화
+  await dotenv.load(fileName: ".env");
   await LocalDataManager.init(); // 저장소 초기화
   runApp(const MyApp());
 }

@@ -27,7 +27,7 @@ class _HomeScreenState extends State<HomeScreen> {
             children: <Widget>[
               SizedBox(height: Other.gapM,),
               // logo
-              SvgPicture.asset("assetName"),
+              SvgPicture.asset("assets/images/memorion_logo.svg"),
               Text(
                 '따듯한 전화',
                 style: Theme.of(context).textTheme.bodyLarge!.copyWith(
@@ -59,7 +59,6 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: ElevatedButton(
-                child: Text("설정\n하기"), 
                 onPressed: ()=>{
                   Navigator.push(context, MaterialPageRoute(
                     builder: (context) => SettingScreen()
@@ -69,6 +68,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   backgroundColor: WidgetStatePropertyAll(AppColors.whiteGray),
                   foregroundColor: WidgetStatePropertyAll(AppColors.black)
                 ),
+                child: Text("설정\n하기"),
               )
             ),
           ],
