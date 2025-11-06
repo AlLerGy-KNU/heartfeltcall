@@ -1,0 +1,19 @@
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.6
+SQLAlchemy>=2.0.36
+pymysql>=1.1.1
+python-dotenv>=1.0.1
+passlib[bcrypt]>=1.7.4
+python-jose[cryptography]>=3.3.0
+pydantic>=2.9.2
+pydantic-settings>=2.6.1
+
+# === 핀 고정(중요) ===
+numpy==1.26.4
+librosa==0.10.2.post1
+matplotlib==3.10.0
+h5py>=3.12.1
+
+# Windows (Intel MKL) 환경이면 이 줄 사용:
+tensorflow-intel==2.15.0
+# (리눅스/맥이면 위 대신 tensorflow==2.15.0 사용)
