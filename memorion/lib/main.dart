@@ -28,7 +28,7 @@ void main() async {
 
   // Android init
   const AndroidInitializationSettings androidInitSettings =
-      AndroidInitializationSettings('@mipmap/ic_launcher');
+      AndroidInitializationSettings('@mipmap/ic_launcher_monochrome');
 
   const InitializationSettings initSettings =
       InitializationSettings(android: androidInitSettings);
