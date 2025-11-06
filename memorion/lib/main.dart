@@ -1,14 +1,58 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:memorion/const/theme.dart';
+import 'package:memorion/screens/calling_screen.dart';
 import 'package:memorion/screens/init_screen.dart';
 import 'package:memorion/services/local_data_manager.dart';
 
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
+    
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+  
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // 바인딩 초기화
   await dotenv.load(fileName: ".env");
   await LocalDataManager.init(); // 저장소 초기화
+
+  // Android init
+  const AndroidInitializationSettings androidInitSettings =
+      AndroidInitializationSettings('@mipmap/ic_launcher');
+
+  const InitializationSettings initSettings =
+      InitializationSettings(android: androidInitSettings);
+
+  await flutterLocalNotificationsPlugin.initialize(
+    initSettings,
+    onDidReceiveNotificationResponse: (NotificationResponse response) {
+      // This callback is called when user taps the notification or
+      // when full-screen intent opens the app.
+      _handleNotificationTap(response);
+    },
+  );
+
+  // Ask Android 13+ notification permission
+  await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>()
+      ?.requestNotificationsPermission();
+
+  // Ask full-screen intent permission if needed
+  await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>()
+      ?.requestFullScreenIntentPermission(); // from plugin docs
+
   runApp(const MyApp());
+}
+
+void _handleNotificationTap(NotificationResponse response) {
+  // You can read payload here
+  final payload = response.payload;
+  // Navigate to a specific screen
+  navigatorKey.currentState?.pushNamed('/call');
 }
 
 class MyApp extends StatelessWidget {
@@ -20,6 +64,10 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Memorion',
       theme: themeData(),
+      navigatorKey: navigatorKey,
+      routes: {
+        '/call': (_) => const CallingScreen(),
+      },
       home: InitScreen(),
     );
   }

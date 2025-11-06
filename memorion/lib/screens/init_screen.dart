@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:memorion/const/other.dart';
 import 'package:memorion/screens/home_screen.dart';
 import 'package:memorion/services/local_data_manager.dart';
+import 'package:memorion/services/api_client.dart';
+import 'package:memorion/services/connection_service.dart';
 
 class InitScreen extends StatefulWidget {
   const InitScreen({super.key});
@@ -13,13 +15,20 @@ class InitScreen extends StatefulWidget {
 class _InitScreenState extends State<InitScreen> {
   //service
   late LocalDataManager localDataManager;
+  late ApiClient _apiClient;
+  late ConnectionService _connectionService;
+
+  bool _isSubmitting = false;
+  String? _lastCode;
 
   @override
   void initState() {
     super.initState();
     LocalDataManager.initData();
-
     localDataManager = LocalDataManager();
+
+    _apiClient = ApiClient();
+    _connectionService = ConnectionService(_apiClient);
   }
 
   @override
@@ -31,7 +40,7 @@ class _InitScreenState extends State<InitScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Padding(
-        padding: const EdgeInsets.all(40.0),
+        padding: EdgeInsets.all(Other.margin),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

@@ -89,39 +89,6 @@ class _SettingScreenState extends State<SettingScreen> {
                 ],
               ),
               SizedBox(height: Other.gapM,),
-              Text(
-                "글씨 크기",
-              ),
-              SizedBox(height: Other.gapSS,),
-              Row(
-                mainAxisSize: MainAxisSize.max,
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: ()=>{},
-                      style: Theme.of(context).elevatedButtonTheme.style?.copyWith(
-                        backgroundColor: WidgetStatePropertyAll(AppColors.whiteGray),
-                        padding: WidgetStatePropertyAll(EdgeInsets.all(8))
-                      ),
-                      child: Text("줄이기", style: Theme.of(context).textTheme.bodyMedium,),  
-                    )
-                  ),
-                  SizedBox(width: Other.gapS,),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: ()=>{},
-                      style: Theme.of(context).elevatedButtonTheme.style?.copyWith(
-                        backgroundColor: WidgetStatePropertyAll(AppColors.main),
-                        foregroundColor: WidgetStatePropertyAll(AppColors.white),
-                        padding: WidgetStatePropertyAll(EdgeInsets.all(8))
-                      ),
-                      child: Text("키우기", style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                        color: AppColors.white
-                      ),),  
-                    )
-                  ),
-                ],
-              ),
               
             ],
           ),
