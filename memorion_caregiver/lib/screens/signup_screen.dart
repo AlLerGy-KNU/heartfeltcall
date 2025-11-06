@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:memorion_caregiver/const/other.dart';
 import 'package:memorion_caregiver/screens/main_screen.dart';
@@ -158,13 +156,14 @@ class _SignupScreenState extends State<SignupScreen> {
               TextFormField(
                 controller: _emailCtrl,
                 decoration: const InputDecoration(
-                  labelText: '아이디',
-                  hintText: 'example@gmail.com',
+                  labelText: '이메일',
+                  hintText: '이메일을 입력해주세요',
                 ),
               ),
               SizedBox(height: Other.gapS,),  
               TextFormField(
                 controller: _phoneCtrl,
+                keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
                   labelText: '전화번호',
                   hintText: '010-0000-0000',
@@ -176,7 +175,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 obscureText: true,
                 decoration: const InputDecoration(
                   labelText: '비밀번호',
-                  hintText: '비밀번호를 입력하세요',
+                  hintText: '비밀번호를 입력해주세요',
                 ),
               ),
               SizedBox(height: Other.gapS,),  
@@ -185,7 +184,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 obscureText: true,
                 decoration: const InputDecoration(
                   labelText: '비밀번호 확인',
-                  hintText: '비밀번호를 다시 한번 입력하세요',
+                  hintText: '비밀번호를 다시 한번 입력해주세요',
                 ),
               )
             ],
