@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
 import 'package:memorion/const/theme.dart';
 import 'package:memorion/screens/calling_screen.dart';
 import 'package:memorion/screens/init_screen.dart';
@@ -14,8 +16,15 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
   
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // 바인딩 초기화
+
   await dotenv.load(fileName: ".env");
   await LocalDataManager.init(); // 저장소 초기화
+
+  // timezone init
+  tz.initializeTimeZones();
+  // 한국이면
+  tz.setLocalLocation(tz.getLocation('Asia/Seoul'));
+
 
   // Android init
   const AndroidInitializationSettings androidInitSettings =
@@ -45,14 +54,22 @@ void main() async {
           AndroidFlutterLocalNotificationsPlugin>()
       ?.requestFullScreenIntentPermission(); // from plugin docs
 
+  // Ask local notification intent
+  await flutterLocalNotificationsPlugin
+    .resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>()
+    ?.requestExactAlarmsPermission();
   runApp(const MyApp());
 }
 
-void _handleNotificationTap(NotificationResponse response) {
-  // You can read payload here
-  final payload = response.payload;
-  // Navigate to a specific screen
+void _handleNotificationTap(NotificationResponse response) async {
   navigatorKey.currentState?.pushNamed('/call');
+
+  // 통화시도 취소
+  for (int i = 0; i < 3; i++) {
+    final int id = 5000 + i;
+    await flutterLocalNotificationsPlugin.cancel(id);
+  }
 }
 
 class MyApp extends StatelessWidget {

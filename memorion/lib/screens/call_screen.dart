@@ -84,6 +84,7 @@
 //   }
 // }
 
+import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:memorion/main.dart';
 
@@ -112,5 +113,98 @@ Future<void> showIncomingCallLikeNotification() async {
     '통화를 시작하려면 탭하세요',
     platformDetails,
     payload: 'call_payload_123',
+  );
+}
+
+NotificationDetails _buildCallNotificationDetails() {
+  const AndroidNotificationDetails androidDetails =
+      AndroidNotificationDetails(
+    'incoming_call_channel_v3',
+    'Incoming Calls',
+    channelDescription: 'Channel for incoming call alerts',
+    importance: Importance.max,
+    priority: Priority.high,
+    category: AndroidNotificationCategory.call,
+    fullScreenIntent: true,
+    autoCancel: true,
+    ongoing: true,
+    sound: RawResourceAndroidNotificationSound('incoming_call'),
+    playSound: true,
+  );
+
+  return const NotificationDetails(android: androidDetails);
+}
+
+Future<void> showCallNow() async {
+  await flutterLocalNotificationsPlugin.show(
+    100,
+    '보호자 전화',
+    '통화를 시작하려면 탭하세요',
+    _buildCallNotificationDetails(),
+    payload: 'call_payload',
+  );
+}
+
+/// Schedule up to [maxAttempts] calls.
+/// [firstTime] is the time for the first call.
+/// [interval] is the gap between attempts, e.g. Duration(minutes: 2).
+Future<void> scheduleCallSeries(
+  tz.TZDateTime firstTime, {
+  int maxAttempts = 3,
+  Duration interval = const Duration(minutes: 2),
+}) async {
+  final details = _buildCallNotificationDetails();
+
+  for (int i = 0; i < maxAttempts; i++) {
+    final attemptTime =
+        firstTime.add(interval * i);
+
+    // Give each attempt a different id
+    final int notificationId = 5000 + i;
+
+    // You can also encode which attempt it is inside the payload
+    final payload = 'call_attempt_$i';
+
+    await flutterLocalNotificationsPlugin.zonedSchedule(
+      notificationId,
+      '보호자 전화',
+      '통화를 시작하려면 탭하세요',
+      attemptTime,
+      details,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      payload: payload,
+    );
+  }
+}
+
+Future<void> test10sCall() async {
+  final when = DateTime.now().add(const Duration(seconds: 10));
+  final tzWhen = tz.TZDateTime.from(when, tz.local);
+
+  const AndroidNotificationDetails androidDetails =
+      AndroidNotificationDetails(
+    'incoming_call_channel_test',
+    'Incoming Calls Test',
+    channelDescription: 'Test call',
+    importance: Importance.max,
+    priority: Priority.high,
+    category: AndroidNotificationCategory.call,
+    fullScreenIntent: true,
+    autoCancel: true,
+    ongoing: true,
+    sound: RawResourceAndroidNotificationSound('incoming_call'),
+    playSound: true,
+  );
+
+  final details = const NotificationDetails(android: androidDetails);
+
+  await flutterLocalNotificationsPlugin.zonedSchedule(
+    9000,
+    '테스트 전화',
+    '받으려면 탭하세요',
+    tzWhen,
+    details,
+    androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+    payload: 'test_call',
   );
 }

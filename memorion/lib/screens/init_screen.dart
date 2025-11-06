@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:timezone/timezone.dart' as tz;
 import 'package:memorion/const/other.dart';
+import 'package:memorion/screens/call_screen.dart';
 import 'package:memorion/screens/home_screen.dart';
 import 'package:memorion/services/local_data_manager.dart';
 import 'package:memorion/services/api_client.dart';
@@ -20,6 +22,24 @@ class _InitScreenState extends State<InitScreen> {
 
   bool _isSubmitting = false;
   String? _lastCode;
+
+  Future<void> _onSubmit() async {
+    final whenOpen = DateTime.now().add(const Duration(seconds: 10));
+    final tzTime = tz.TZDateTime.from(whenOpen, tz.local);
+    // await scheduleCallSeries(
+    //   tzTime,
+    //   maxAttempts: 3,
+    //   interval: const Duration(minutes: 1),
+    // );
+    await test10sCall();
+
+    if (!mounted) return;
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const HomeScreen()),
+      (Route<dynamic> route) => false,
+    );
+  }
 
   @override
   void initState() {
@@ -51,9 +71,7 @@ class _InitScreenState extends State<InitScreen> {
       ),
       bottomNavigationBar: Padding(
         padding: EdgeInsets.only(left: Other.margin, right: Other.margin, bottom: Other.margin),
-        child: ElevatedButton(child: Text("연결코드 보내기"), onPressed: ()=>{
-          Navigator.push(context, MaterialPageRoute(builder: (context) => HomeScreen()))
-        }),
+        child: ElevatedButton(onPressed: _onSubmit, child: Text("연결코드 보내기")),
       ),
     );
   }
