@@ -1,9 +1,28 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:memorion/const/colors.dart';
 import 'package:memorion/const/other.dart';
 import 'package:memorion/screens/home_screen.dart';
 import 'package:memorion/services/voice_recorder_service.dart';
+
+Future<bool> playWav(String filePath) async {
+  final player = AudioPlayer();
+
+  // Stop any previous playback just in case
+  await player.stop();
+
+  // Start playing local file
+  await player.play(DeviceFileSource(filePath));
+
+  // Wait until player completes
+  await player.onPlayerComplete.first;
+
+  // Dispose player after playback
+  await player.dispose();
+
+  return true;
+}
 
 class CallingScreen extends StatefulWidget {
   const CallingScreen({super.key});
@@ -14,13 +33,41 @@ class CallingScreen extends StatefulWidget {
 
 class _CallingScreenState extends State<CallingScreen> {
   final recorder = VoiceRecorderService();
+  String status = "말하는중";  // 사용자가 말할때는 듣는중으로 표시, 녹음된 파일을 재생할땐 말하는중으로 표시
+  bool isStartVoice = false;
+
+  @override
+  void initState() async {
+    super.initState();
+    isStartVoice = false;
+    status = "말하는중";
+    _play();
+  }
   
   Future<void> _startVoiceRecord() async {
     await recorder.start();
+    setState(() {
+      isStartVoice = true;  
+    });
+    
   }
 
   Future<void> _endVoiceRecord() async {
     final file = await recorder.stop();
+    setState(() {
+      isStartVoice = false;  
+    });
+  }
+
+  void _play() async {
+    // This will block in async until playback is finished
+    final finished = await playWav('assets/voices/a1.wav');
+
+    if (finished) {
+      setState(() {
+        status = "듣는중";
+      });
+    }
   }
 
   @override
@@ -60,7 +107,7 @@ class _CallingScreenState extends State<CallingScreen> {
                   borderRadius: BorderRadius.circular(20),
                   color: AppColors.white.withValues(alpha: 0.5)
                 ),
-                child: Text("듣는중...", style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                child: Text(status, style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                   color: AppColors.main
                 )),
               ),
@@ -73,7 +120,7 @@ class _CallingScreenState extends State<CallingScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
                         ElevatedButton(
-                          onPressed: () => _startVoiceRecord(),
+                          onPressed: (status == "듣는중" && isStartVoice == false) ? () => _startVoiceRecord() : () {},
                           style: Theme.of(context).elevatedButtonTheme.style?.copyWith(
                             backgroundColor: WidgetStatePropertyAll(AppColors.effectMain.withValues(alpha: 0.5)),
                             shape: WidgetStatePropertyAll(
@@ -85,7 +132,7 @@ class _CallingScreenState extends State<CallingScreen> {
                           ),),
                         ),
                         ElevatedButton(
-                          onPressed: () => _endVoiceRecord(),
+                          onPressed: (status == "듣는중" && isStartVoice == true) ? () => _endVoiceRecord() : () {},
                           style: Theme.of(context).elevatedButtonTheme.style?.copyWith(
                             backgroundColor: WidgetStatePropertyAll(AppColors.gray.withValues(alpha: 0.5)),
                             shape: WidgetStatePropertyAll(

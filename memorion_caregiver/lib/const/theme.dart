@@ -66,7 +66,7 @@ ThemeData themeData() {
       titleLarge: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
       titleMedium: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
       titleSmall: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-      bodyMedium: TextStyle(fontSize: 20),
+      bodyMedium: TextStyle(fontSize: 18),
       bodySmall: TextStyle(fontSize: 16, color: Colors.grey),
       
       // 버튼 기본 라벨 역할

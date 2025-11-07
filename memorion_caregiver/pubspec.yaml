@@ -25,6 +25,10 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/memorion_logo.svg
+    - assets/images/result.png
+    - assets/images/ok_result.png
+    - assets/images/alt_result.png
+    - assets/images/test_result.png
     - .env
   fonts:
     - family: Pretendard

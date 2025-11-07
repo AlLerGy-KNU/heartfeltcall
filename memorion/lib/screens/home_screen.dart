@@ -41,7 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               Spacer(),
               Text(
-                "보호자: $name님",
+                "보호자: 임꺽정님",
               ),              
             ],
           ),
