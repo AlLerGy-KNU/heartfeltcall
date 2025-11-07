@@ -61,7 +61,8 @@
 [Dependents] /dependents (보호자 전용)
 1) POST /dependents
    - 설명: 대상자 생성
-   - 요청(Body JSON): {
+   - 요청 헤더: Authorization: Bearer 보호자토큰, Content-Type: application/json
+   - 요청 바디(JSON): {
        name: string,
        birth_date?: string(YYYY-MM-DD),
        sex?: "M"|"F"|"U",
@@ -69,7 +70,7 @@
        retry_count?: number(기본 3),
        retry_interval_min?: number(기본 10)
      }
-   - 응답(200): { id: number, name: string, preferred_call_time?: string }
+   - 응답 바디(200): { id: number, name: string, preferred_call_time?: string, last_state: number, last_exam_at?: string, last_mel_image?: string }
 
 2) GET /dependents
    - 설명: 대상자 목록
@@ -132,7 +133,9 @@
 4) POST /voice/sessions/{session_id}/answer
    - 설명: 답변 음성 3개 업로드 → 즉시 AI 분석(함수는 비워둠) → 피보호자 상태/최근 검사시각 갱신(오디오/콜 기록 저장 안 함)
    - 인증: 피보호자 토큰 필요
-   - 요청: multipart/form-data, 파일 필드명: files (3개)
+   - 요청(업로드 형식): multipart/form-data
+     - 키: files (여러 개, 최대 3개)
+     - 각 파일: audio/wav (answer1.wav, answer2.wav, answer3.wav 권장)
    - 응답(성공): { "success": true, "score": number }
    - 응답(실패): { "success": false, "message": string }
 
@@ -194,3 +197,109 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 주요 제약/주의사항
 - /connections의 경로가 두 라우터(Connections, Invitations)에서 중복 정의됨. 제품 적용 전 통합 또는 프리픽스 조정 필요.
 - 데이터베이스 스키마는 앱 시작 시 자동 생성되지만, 스키마 변경 시에는 마이그레이션 도구(예: Alembic) 사용 권장.
+부가 다운로드(질문 파일 일괄 전송)
+- GET /voice/sessions/{session_id}/question/files
+  - 설명: 질문 음성들을 multipart/form-data로 한 번에 반환합니다.
+  - 인증: 피보호자 토큰 필요
+  - 응답: multipart/form-data; 각 part의 name="file", filename="a{i}.wav", Content-Type: audio/wav
+
+
+요청/응답 요약(헤더/바디 명시)
+
+[Auth]
+- POST /auth/signup
+  - 헤더: Content-Type: application/json
+  - 바디: { name: string, email: EmailStr, password: string, phone?: string }
+  - 응답(200): { success: boolean, user_id: number }
+
+- POST /auth/login
+  - 헤더: Content-Type: application/json
+  - 바디: { email: EmailStr, password: string }
+  - 응답(200): { access_token: string, token_type: "bearer" }
+
+- GET /auth/me
+  - 헤더: Authorization: Bearer 보호자토큰
+  - 응답(200): { id: number, role: string, email: EmailStr, name?: string }
+
+[Dependents] (보호자 전용)
+- POST /dependents
+  - 헤더: Authorization: Bearer 보호자토큰, Content-Type: application/json
+  - 바디: { name: string, birth_date?: "YYYY-MM-DD", sex?: "M"|"F"|"U", preferred_call_time?: "HH:MM", retry_count?: number, retry_interval_min?: number }
+  - 응답(200): { id: number, name: string, preferred_call_time?: string, last_state: number, last_exam_at?: string, last_mel_image?: string }
+
+- GET /dependents
+  - 헤더: Authorization: Bearer 보호자토큰
+  - 응답(200): { dependents: [ { id: number, name: string, preferred_call_time?: string, last_state: number, last_exam_at?: string, last_mel_image?: string } ] }
+
+- GET /dependents/{dep_id}
+  - 헤더: Authorization: Bearer 보호자토큰
+  - 응답(200): { id, name, preferred_call_time?, last_state, last_exam_at?, last_mel_image? }
+
+- PUT /dependents/{dep_id}
+  - 헤더: Authorization: Bearer 보호자토큰, Content-Type: application/json
+  - 바디: { name?, birth_date?, sex?, preferred_call_time?, retry_count?, retry_interval_min? }
+  - 응답(200): { success: true }
+
+- DELETE /dependents/{dep_id}
+  - 헤더: Authorization: Bearer 보호자토큰
+  - 응답(200): { success: true }
+
+[Analyses] (보호자 전용)
+- GET /dependents/{dep_id}/analyses/latest
+  - 헤더: Authorization: Bearer 보호자토큰
+  - 응답(200): { state: number, risk_score?: number, created_at: string(ISO8601) }
+
+- GET /dependents/{dep_id}/analyses/history
+  - 헤더: Authorization: Bearer 보호자토큰
+  - 응답(200): { analyses: [ { state: number, risk_score?: number, created_at: string } ] }
+
+[Invitations]
+- POST /connections (공개)
+  - 헤더/바디: 없음
+  - 응답(200): { code: string, expires_at: string(ISO8601) }
+
+- GET /connections/{code}/status (공개)
+  - 헤더: 없음
+  - 응답(200): { status: "pending"|"connected"|"used"|"expired", auth_code?: string }
+
+- POST /connections/accept (보호자 전용)
+  - 헤더: Authorization: Bearer 보호자토큰, Content-Type: application/json
+  - 바디: { code: string, dependent_id?: number, dependent?: { name: string, birth_date?, relation?, preferred_call_time?, retry_interval_min? } }
+  - 응답(200): { success: true, dependent_id: number }
+
+- POST /auth/dependent/exchange (공개)
+  - 헤더: Content-Type: application/json
+  - 바디: { code: string, auth_code: string }
+  - 응답(200): { access_token: string, token_type: "bearer", expires_in: number, dependent_id: number }
+
+[Voice] (피보호자 전용)
+- POST /voice/sessions
+  - 헤더: Authorization: Bearer 대상자토큰
+  - 바디: 없음
+  - 응답(200): { session_id: number, token: string, expires_in: number }
+
+- GET /voice/sessions/{session_id}/question
+  - 헤더: Authorization: Bearer 대상자토큰
+  - 응답(200): { files: [ { name: string, url: string } ] }
+
+- GET /voice/sessions/{session_id}/question/{filename}
+  - 헤더: Authorization: Bearer 대상자토큰
+  - 응답: audio/wav 바이너리
+
+- GET /voice/sessions/{session_id}/question/files
+  - 헤더: Authorization: Bearer 대상자토큰
+  - 응답: multipart/form-data; 각 part name="file", filename="a{i}.wav"
+
+- POST /voice/sessions/{session_id}/answer
+  - 헤더: Authorization: Bearer 대상자토큰, Content-Type: multipart/form-data
+  - 바디(form-data): files(최대 3개, 각 audio/wav)
+  - 응답(200): { success: true, score: number } 또는 { success: false, message: string }
+
+- DELETE /voice/sessions/{session_id}
+  - 헤더: Authorization: Bearer 대상자토큰
+  - 응답(200): { success: true, message: "session closed" }
+
+[System]
+- GET /system/health
+  - 헤더: 없음
+  - 응답(200): { status: "ok" }

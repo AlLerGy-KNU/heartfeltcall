@@ -28,6 +28,9 @@ class Settings(BaseSettings):
     # AI model paths (optional)
     mci_model_path: str | None = Field(default=None, alias="MCI_MODEL_PATH")
 
+    # External AI service (optional)
+    ai_service_url: str = Field(default="http://localhost:8001", alias="AI_SERVICE_URL")
+
     class Config:
         env_file = ".env"
         case_sensitive = True

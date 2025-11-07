@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 import hashlib, os
@@ -81,6 +81,43 @@ def download_session_question(
     return FileResponse(path, media_type="audio/wav", filename=filename)
 
 
+@router.get("/sessions/{session_id}/question/files")
+def download_session_questions_as_formdata(
+    session_id: int,
+    db: Session = Depends(get_db),
+    dep: Dependent = Depends(get_current_dependent)
+):
+    """
+    Returns the available question WAV files (a1..aN.wav) as a multipart/form-data response.
+    Each part has Content-Disposition: form-data; name="file"; filename="a{i}.wav".
+    """
+    sess = db.query(VoiceSession).filter(VoiceSession.id == session_id, VoiceSession.dependent_id == dep.id).first()
+    if not sess or sess.status != "OPEN":
+        raise HTTPException(404, "Session not found or closed")
+    qdir = global_questions_dir()
+    count = max(1, int(getattr(settings, 'daily_questions_count', 3)))
+    files = [f"a{i}.wav" for i in range(1, count + 1)]
+    available = [f for f in files if os.path.exists(os.path.join(qdir, f))]
+    if not available:
+        raise HTTPException(404, "No question files available")
+
+    boundary = "----memoryon-boundary"
+    chunks: list[bytes] = []
+    for fname in available:
+        path = os.path.join(qdir, fname)
+        header = (
+            f"--{boundary}\r\n"
+            f"Content-Disposition: form-data; name=\"file\"; filename=\"{fname}\"\r\n"
+            f"Content-Type: audio/wav\r\n\r\n"
+        ).encode("utf-8")
+        with open(path, "rb") as f:
+            data = f.read()
+        chunks.append(header + data + b"\r\n")
+    chunks.append(f"--{boundary}--\r\n".encode("utf-8"))
+    body = b"".join(chunks)
+    return Response(content=body, media_type=f"multipart/form-data; boundary={boundary}")
+
+
 @router.post("/sessions/{session_id}/answer", response_model=dict)
 async def upload_answers(
     session_id: int,
@@ -92,14 +129,24 @@ async def upload_answers(
     if not sess or sess.status != "OPEN":
         raise HTTPException(404, "Session not found or closed")
 
-    import tempfile
-    with tempfile.TemporaryDirectory() as tmpdir:
+    # Persist files under MEDIA_ROOT/call-{session}-{rand} so external service can read voice-files/{callId}
+    import uuid, shutil
+    call_id = f"call-{session_id}-{uuid.uuid4().hex[:8]}"
+    base_dir = os.path.join(settings.media_root, call_id)
+    ensure_dir(base_dir)
+    try:
         for i, upload in enumerate(files[:3], start=1):
-            fp = os.path.join(tmpdir, f"answer{i}.wav")
+            fp = os.path.join(base_dir, f"answer{i}.wav")
             with open(fp, "wb") as f:
                 f.write(upload.file.read())
-        # Run multi-file analysis (placeholder) against temp dir
-        analysis_json = await run_multi_voice_analysis(tmpdir)
+        # Call analysis (external service or local fallback)
+        analysis_json = await run_multi_voice_analysis(base_dir)
+    finally:
+        # Clean up uploaded files after analysis attempt
+        try:
+            shutil.rmtree(base_dir)
+        except Exception:
+            pass
     score: float | None = None
     if analysis_json and analysis_json.get("success"):
         # Accept either top-level score or nested under result
@@ -131,6 +178,18 @@ async def upload_answers(
         if mel_b64:
             dep.last_mel_image = mel_b64
         db.add(dep)
+
+        # Persist analysis history record without audio
+        from app.models.analysis import Analysis
+        an = Analysis(
+            dependent_id=dep.id,
+            call_id=None,
+            state=score,
+            risk_score=score,
+            model_version="v1",
+            mel_image=mel_b64
+        )
+        db.add(an)
         db.commit()
         return {"success": True, "score": score}
     else:
