@@ -63,6 +63,7 @@ ThemeData themeData() {
     // 전체 텍스트 스타일 커스터마이징
     textTheme: const TextTheme(
       displayLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+      displayMedium: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
       titleLarge: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
       titleMedium: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
       titleSmall: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),

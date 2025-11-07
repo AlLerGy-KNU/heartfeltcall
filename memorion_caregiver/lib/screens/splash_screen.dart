@@ -38,18 +38,13 @@ class _SplashScreenState extends State<SplashScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 SizedBox(height: 120,),
-                Row(
-                  mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SvgPicture.asset("assets/images/memorion_logo.svg", width: 60,),
-                    Text("따듯한전화", style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                      color: AppColors.main
-                    ), textAlign: TextAlign.center,)
-                  ],
-                ),
-                SizedBox(height: Other.gapM,),
-                Text("독거어르신을 위한\n치매건강관리시스템", style: Theme.of(context).textTheme.titleMedium, textAlign: TextAlign.center,),
+                SvgPicture.asset("assets/images/memorion_logo.svg", width: 60,),
+                SizedBox(height: Other.gapSS,),
+                Text("따듯한전화", style: Theme.of(context).textTheme.displayLarge!.copyWith(
+                  color: AppColors.main
+                ), textAlign: TextAlign.center,),
+                SizedBox(height: Other.gapS,),
+                Text("독거어르신을 위한\n치매건강관리시스템", style: Theme.of(context).textTheme.displayMedium, textAlign: TextAlign.center,),
               ],
             ),
           ),

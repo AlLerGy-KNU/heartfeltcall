@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -13,7 +15,7 @@ Future<bool> playWav(String filePath) async {
   await player.stop();
 
   // Start playing local file
-  await player.play(DeviceFileSource(filePath));
+  await player.play(AssetSource(filePath));
 
   // Wait until player completes
   await player.onPlayerComplete.first;
@@ -34,10 +36,12 @@ class CallingScreen extends StatefulWidget {
 class _CallingScreenState extends State<CallingScreen> {
   final recorder = VoiceRecorderService();
   String status = "말하는중";  // 사용자가 말할때는 듣는중으로 표시, 녹음된 파일을 재생할땐 말하는중으로 표시
+  int audioCnt = 1;
+  int maxCnt = 3;
   bool isStartVoice = false;
 
   @override
-  void initState() async {
+  void initState() {
     super.initState();
     isStartVoice = false;
     status = "말하는중";
@@ -57,12 +61,33 @@ class _CallingScreenState extends State<CallingScreen> {
     setState(() {
       isStartVoice = false;  
     });
+    if (!mounted) return;
+
+    if (audioCnt <= maxCnt) {
+      _play();
+    } else if (audioCnt > maxCnt ) {
+      setState(() {
+        status = "대화종료";
+        sleep(Durations.medium4);
+      });
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        (Route<dynamic> route) => false,
+      );
+    }
   }
 
   void _play() async {
     // This will block in async until playback is finished
-    final finished = await playWav('assets/voices/a1.wav');
+    setState(() {
+      status = "말하는중";
+    });
 
+    final finished = await playWav('voices/a$audioCnt.wav');
+    setState(() {
+      audioCnt+=1;  
+    });
+    
     if (finished) {
       setState(() {
         status = "듣는중";
