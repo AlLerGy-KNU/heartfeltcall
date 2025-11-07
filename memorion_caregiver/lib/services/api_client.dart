@@ -74,4 +74,21 @@ class ApiClient {
       headers: _headers(useAuth: useAuth),
     );
   }
+
+  /// POST multipart/form-data
+  Future<http.StreamedResponse> postMultipart(
+    String path, {
+    List<http.MultipartFile>? files,
+    Map<String, String>? fields,
+    bool useAuth = false,
+  }) async {
+    final uri = _uri(path);
+    final req = http.MultipartRequest('POST', uri);
+    if (useAuth && accessToken != null) {
+      req.headers['Authorization'] = 'Bearer $accessToken';
+    }
+    if (fields != null) req.fields.addAll(fields);
+    if (files != null) req.files.addAll(files);
+    return await req.send();
+  }
 }
