@@ -1,0 +1,571 @@
+{
+    "info":  {
+                 "name":  "HeartfeltCall End-to-End Test",
+                 "_postman_id":  "3db8b9a4-8f6a-4bfc-9a0b-ec0a1e8b2c01",
+                 "description":  "End-to-end Postman collection for HeartfeltCall / MemoryOn API.\nRun in order from 1 to 6.\nBefore running, set {{base_url}} and choose WAV files for question/answer in the form-data requests.",
+                 "schema":  "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+             },
+    "item":  [
+                 {
+                     "name":  "1) Auth",
+                     "item":  [
+                                  {
+                                      "name":  "Signup",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/auth/signup",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "auth",
+                                                                               "signup"
+                                                                           ]
+                                                              },
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@test.com\",\n  \"password\": \"Abcdef!23456\",\n  \"phone\": \"+821012345678\"\n}"
+                                                               }
+                                                  },
+                                      "response":  [
+
+                                                   ]
+                                  },
+                                  {
+                                      "name":  "Login (set {{jwt}})",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/auth/login",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "auth",
+                                                                               "login"
+                                                                           ]
+                                                              },
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"email\": \"john@test.com\",\n  \"password\": \"Abcdef!23456\"\n}"
+                                                               }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status 200\u0027, function(){ pm.response.to.have.status(200); });",
+                                                                                    "var data = pm.response.json();",
+                                                                                    "pm.collectionVariables.set(\u0027jwt\u0027, data.access_token);",
+                                                                                    "console.log(\u0027jwt set:\u0027, data.access_token);"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "Me",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{jwt}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/auth/me",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "auth",
+                                                                               "me"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "response":  [
+
+                                                   ]
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "2) Dependents",
+                     "item":  [
+                                  {
+                                      "name":  "Create Dependent (set {{dependent_id}})",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{jwt}}"
+                                                                     },
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/dependents",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "dependents"
+                                                                           ]
+                                                              },
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"name\": \"Grandma Kim\",\n  \"birth_date\": \"1945-02-12\",\n  \"sex\": \"F\",\n  \"preferred_call_time\": \"19:00\",\n  \"retry_count\": 3,\n  \"retry_interval_min\": 10\n}"
+                                                               }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status 200\u0027, function(){ pm.response.to.have.status(200); });",
+                                                                                    "var data = pm.response.json();",
+                                                                                    "var id = data.id || (data \u0026\u0026 data.dependent \u0026\u0026 data.dependent.id);",
+                                                                                    "pm.collectionVariables.set(\u0027dependent_id\u0027, id);",
+                                                                                    "console.log(\u0027dependent_id set:\u0027, id);"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "List Dependents",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{jwt}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/dependents",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "dependents"
+                                                                           ]
+                                                              }
+                                                  }
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "3) Connections (Invitations)",
+                     "item":  [
+                                  {
+                                      "name":  "Create Invitation (set {{code}})",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/connections",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "connections"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status 200\u0027, function(){ pm.response.to.have.status(200); });",
+                                                                                    "var data = pm.response.json();",
+                                                                                    "pm.collectionVariables.set(\u0027code\u0027, data.code);",
+                                                                                    "console.log(\u0027code set:\u0027, data.code);"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "Accept Invitation (set {{dependent_id}})",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{jwt}}"
+                                                                     },
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/connections/accept",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "connections",
+                                                                               "accept"
+                                                                           ]
+                                                              },
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"code\": \"{{code}}\",\n  \"dependent_id\": {{dependent_id}}\n}"
+                                                               }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status 200\u0027, function(){ pm.response.to.have.status(200); });",
+                                                                                    "var data = pm.response.json();",
+                                                                                    "if (data.dependent_id) { pm.collectionVariables.set(\u0027dependent_id\u0027, data.dependent_id); }"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "Get Invitation Status (set {{auth_code}})",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/connections/{{code}}/status",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "connections",
+                                                                               "{{code}}",
+                                                                               "status"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "var data = {}; try { data = pm.response.json(); } catch (e) {};",
+                                                                                    "if (data.auth_code) { pm.collectionVariables.set(\u0027auth_code\u0027, data.auth_code); }",
+                                                                                    "pm.test(\u0027status connected or pending\u0027, function(){ pm.expect([\u0027connected\u0027,\u0027pending\u0027,\u0027used\u0027,\u0027expired\u0027]).to.include(data.status); });"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "Exchange Dependent Token",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/auth/dependent/exchange",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "auth",
+                                                                               "dependent",
+                                                                               "exchange"
+                                                                           ]
+                                                              },
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"code\": \"{{code}}\",\n  \"auth_code\": \"{{auth_code}}\"\n}"
+                                                               }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status 200\u0027, function(){ pm.response.to.have.status(200); });",
+                                                                                    "var data = pm.response.json();",
+                                                                                    "if (data.dependent_id) { pm.collectionVariables.set(\u0027dependent_id\u0027, data.dependent_id); }",
+                                                                                    "pm.collectionVariables.set(\u0027dependent_token\u0027, data.access_token);"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "4) Voice Sessions (Dependent)",
+                     "item":  [
+                                  {
+                                      "name":  "Start Session (set {{session_id}} \u0026 {{session_token}})",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{dependent_token}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/voice/sessions",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "voice",
+                                                                               "sessions"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027Status 200\u0027, function(){ pm.response.to.have.status(200); });",
+                                                                                    "var data = pm.response.json();",
+                                                                                    "pm.collectionVariables.set(\u0027session_id\u0027, data.session_id);",
+                                                                                    "pm.collectionVariables.set(\u0027session_token\u0027, data.token);"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "Upload Answer (triggers AI analysis)",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{dependent_token}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/voice/sessions/{{session_id}}/answer",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "voice",
+                                                                               "sessions",
+                                                                               "{{session_id}}",
+                                                                               "answer"
+                                                                           ]
+                                                              },
+                                                      "body":  {
+                                                                   "mode":  "formdata",
+                                                                   "formdata":  [
+                                                                                    {
+                                                                                        "key":  "file",
+                                                                                        "type":  "file",
+                                                                                        "src":  ""
+                                                                                    }
+                                                                                ]
+                                                               },
+                                                      "description":  "Choose a local WAV file in Postman UI for the \u0027file\u0027 field before running."
+                                                  },
+                                      "response":  [
+
+                                                   ]
+                                  },
+                                  {
+                                      "name":  "List Questions",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{dependent_token}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/voice/sessions/{{session_id}}/question",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "voice",
+                                                                               "sessions",
+                                                                               "{{session_id}}",
+                                                                               "question"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "End Session",
+                                      "request":  {
+                                                      "method":  "DELETE",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{dependent_token}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/voice/sessions/{{session_id}}",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "voice",
+                                                                               "sessions",
+                                                                               "{{session_id}}"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "response":  [
+
+                                                   ]
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "5) Analyses",
+                     "item":  [
+                                  {
+                                      "name":  "Latest",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{jwt}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/dependents/{{dependent_id}}/analyses/latest",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "dependents",
+                                                                               "{{dependent_id}}",
+                                                                               "analyses",
+                                                                               "latest"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "History",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{jwt}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/dependents/{{dependent_id}}/analyses/history",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "dependents",
+                                                                               "{{dependent_id}}",
+                                                                               "analyses",
+                                                                               "history"
+                                                                           ]
+                                                              }
+                                                  }
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "6) System",
+                     "item":  [
+                                  {
+                                      "name":  "Health",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/system/health",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "system",
+                                                                               "health"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "response":  [
+
+                                                   ]
+                                  }
+                              ]
+                 }
+             ],
+    "variable":  [
+                     {
+                         "key":  "base_url",
+                         "value":  "http://127.0.0.1:8000"
+                     },
+                     {
+                         "key":  "jwt",
+                         "value":  ""
+                     },
+                     {
+                         "key":  "dependent_token",
+                         "value":  ""
+                     },
+                     {
+                         "key":  "dependent_id",
+                         "value":  ""
+                     },
+                     {
+                         "key":  "code",
+                         "value":  ""
+                     },
+                     {
+                         "key":  "auth_code",
+                         "value":  ""
+                     },
+                     {
+                         "key":  "session_id",
+                         "value":  ""
+                     },
+                     {
+                         "key":  "session_token",
+                         "value":  ""
+                     },
+                     {
+                         "key":  "call_id",
+                         "value":  ""
+                     }
+                 ]
+}

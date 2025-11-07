@@ -1,5 +1,5 @@
 from datetime import datetime, date
-from sqlalchemy import String, Integer, Date, DateTime, Enum, ForeignKey, Index
+from sqlalchemy import String, Integer, Date, DateTime, Enum, ForeignKey, Index, Float, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 
@@ -30,6 +30,10 @@ class Dependent(Base):
     preferred_call_time: Mapped[str | None] = mapped_column(String(5), nullable=True)
     retry_count: Mapped[int] = mapped_column(Integer, default=3)
     retry_interval_min: Mapped[int] = mapped_column(Integer, default=10)
+    # 최근 분석 상태 값(부동소수, -1.0=미분석) 및 최근 검사 시각
+    last_state: Mapped[float] = mapped_column(Float, default=-1.0)
+    last_exam_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    last_mel_image: Mapped[str | None] = mapped_column(Text, nullable=True)
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

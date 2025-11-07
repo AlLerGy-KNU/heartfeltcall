@@ -1,0 +1,305 @@
+메모리온(HeartfeltCall) 서버 API 명세서 (현재 코드 기준)
+
+개요
+- 프레임워크: FastAPI
+- 엔드포인트 그룹: 인증(Auth), 보호자/대상자(Dependents), 초대(Invitations), 음성(Voice), 분석(Analyses), 시스템(System)
+- 인증: OAuth2 Password Bearer 토큰. 보호자 전용 엔드포인트는 CAREGIVER/ADMIN 역할 필요.
+- 토큰 유형:
+  - 보호자 토큰: /auth/login 발급. JWT sub=숫자형 사용자 ID.
+  - 대상자 토큰(임시): /auth/dependent/exchange 발급. sub="dependent:{id}", role="dependent". 보호자 전용 API 접근 불가.
+
+인증(Authorization)
+- 헤더: Authorization: Bearer <JWT>
+- 토큰 발급/파싱:
+  - 로그인 보호자 토큰: POST /auth/login → access_token
+  - 현재 사용자 조회: GET /auth/me (보호자 토큰 필요)
+  - 대상자 교환 토큰: POST /auth/dependent/exchange (공개)
+
+환경/설정
+- .env 예시: APP_ENV, SECRET_KEY, ACCESS_TOKEN_EXPIRE_MINUTES, ALGORITHM, DATABASE_URL, MEDIA_ROOT
+- DB: SQLAlchemy + MySQL(pymysql). 앱 시작 시 테이블 자동 생성.
+- 파일 저장 루트: MEDIA_ROOT (서버 시작 시 디렉토리 생성)
+ - GPT/TTs(선택): OpenAI 기반 자동 질문/음성 합성 사용 가능
+   - OPENAI_API_KEY: OpenAI API Key
+   - OPENAI_API_BASE: (선택) OpenAI 호환 엔드포인트 Base URL
+   - GPT_QUESTIONS_MODEL: 일일 질문 생성 모델 (기본 gpt-4o-mini)
+   - GPT_QUESTIONS_LANG: 질문 언어(기본 ko)
+   - DAILY_QUESTIONS_COUNT: 일일 질문 개수(기본 3)
+   - TTS_PROVIDER: tts 제공자(openai)
+   - TTS_MODEL: tts 모델명(기본 gpt-4o-mini-tts)
+   - TTS_VOICE: 음색(기본 alloy)
+
+에러 규칙(요약)
+- 400 Bad Request: 잘못된 요청/유효하지 않은 코드 등
+- 401 Unauthorized: 잘못된 자격증명/토큰, 비활성 사용자
+- 403 Forbidden: 보호자 권한 필요
+- 404 Not Found: 리소스 없음
+- 409 Conflict: 이미 사용됨/연결됨 등 충돌 상황
+
+라우팅 및 엔드포인트
+
+[Auth] /auth
+1) POST /auth/signup
+   - 설명: 보호자 회원가입
+   - 요청(Body JSON): { name: string, email: EmailStr, password: string, phone?: string }
+   - 응답(200): { "success": true, "user_id": number }
+   - 오류: 400 이메일 중복
+   - 비밀번호 정책: 12자 이상이며 다음 중 3종류 이상 포함(소문자/대문자/숫자/특수문자)
+
+2) POST /auth/login
+   - 설명: 보호자 로그인 → JWT 발급
+   - 요청(Body JSON): { email: EmailStr, password: string }
+   - 응답(200): { access_token: string, token_type: "bearer" }
+   - 오류: 401 잘못된 자격증명
+
+3) GET /auth/me
+   - 설명: 현재 사용자 정보(보호자)
+   - 인증: 보호자 토큰 필요
+   - 응답(200): { id: number, role: string, email: EmailStr, name?: string }
+
+
+[Dependents] /dependents (보호자 전용)
+1) POST /dependents
+   - 설명: 대상자 생성
+   - 요청 헤더: Authorization: Bearer 보호자토큰, Content-Type: application/json
+   - 요청 바디(JSON): {
+       name: string,
+       birth_date?: string(YYYY-MM-DD),
+       sex?: "M"|"F"|"U",
+       preferred_call_time?: string(HH:MM),
+       retry_count?: number(기본 3),
+       retry_interval_min?: number(기본 10)
+     }
+   - 응답 바디(200): { id: number, name: string, preferred_call_time?: string, last_state: number, last_exam_at?: string, last_mel_image?: string }
+
+2) GET /dependents
+   - 설명: 대상자 목록
+   - 응답(200): { dependents: [ { id, name, preferred_call_time?, last_state, last_exam_at?, last_mel_image? } ] }
+
+3) GET /dependents/{dep_id}
+   - 설명: 대상자 상세(보호자 소유 검증)
+   - 응답(200): 대상자 객체(필드: id, name, preferred_call_time?, last_state, last_exam_at?, last_mel_image?)
+   - 오류: 404
+
+4) PUT /dependents/{dep_id}
+   - 설명: 대상자 정보 수정
+   - 요청(Body JSON): 수정 가능한 모든 필드(Optional)
+   - 응답(200): { "success": true }
+   - 오류: 404
+
+5) DELETE /dependents/{dep_id}
+   - 설명: 대상자 삭제(소프트 삭제: deleted_at 설정)
+   - 응답(200): { "success": true }
+   - 오류: 404
+
+
+[Analyses] /dependents (보호자 전용, 분석 하위 경로)
+1) GET /dependents/{dep_id}/analyses/latest
+   - 설명: 최신 분석 결과
+   - 응답(200): { state?: "NORMAL"|"MCI"|"DEMENTIA", risk_score?: number, created_at: ISO8601 string }
+   - 대상자에 분석이 없으면 state/risk_score는 null, created_at는 현재시간
+
+2) GET /dependents/{dep_id}/analyses/history
+   - 설명: 분석 히스토리
+   - 응답(200): { analyses: [ { state?, risk_score?, created_at } ] }
+
+
+[Voice] /voice (피보호자 전용)
+자동 질문 음성(TTS)
+- 매일 자정 이후, 전 사용자 공용 폴더(`/q`)에 질문 음성 3개를 생성/갱신합니다. 이전 파일은 비웁니다.
+- 파일명: a1.wav, a2.wav, a3.wav (개수는 DAILY_QUESTIONS_COUNT로 조정)
+- 기본 질문(한국어, LLM 미설정 시):
+  1) 오늘 기분이 어떠세요?
+  2) 최근에 즐겁게 보낸 시간이 있으셨나요?
+  3) 오늘 식사는 맛있게 하셨나요?
+- 구현 메모: 현재는 무음 WAV placeholder를 생성하며, OpenAI TTS 연동 지점은 교체 가능(app/services/tts.py).
+
+1) POST /voice/sessions
+   - 설명: 피보호자 세션 시작(1시간 유효 토큰 생성). 질문 파일은 공용 폴더에서 제공됩니다.
+   - 인증: 피보호자 토큰 필요(교환 토큰)
+   - 요청: 본문 없음
+   - 응답(200): { session_id: number, token: string, expires_in: 3600 }
+
+2) GET /voice/sessions/{session_id}/question
+   - 설명: 당일 질문 음성 목록 조회(공용 폴더 a1~aN.wav 기준)
+   - 인증: 피보호자 토큰 필요
+   - 응답(200): { files: [ { name: string, url: string }, ... ] }
+
+3) GET /voice/sessions/{session_id}/question/{filename}
+   - 설명: 지정 질문 음성 다운로드(audio/wav). filename은 a1.wav 등.
+   - 인증: 피보호자 토큰 필요
+   - 응답: 파일 스트림
+
+4) POST /voice/sessions/{session_id}/answer
+   - 설명: 답변 음성 3개 업로드 → 즉시 AI 분석(함수는 비워둠) → 피보호자 상태/최근 검사시각 갱신(오디오/콜 기록 저장 안 함)
+   - 인증: 피보호자 토큰 필요
+   - 요청(업로드 형식): multipart/form-data
+     - 키: files (여러 개, 최대 3개)
+     - 각 파일: audio/wav (answer1.wav, answer2.wav, answer3.wav 권장)
+   - 응답(성공): { "success": true, "score": number }
+   - 응답(실패): { "success": false, "message": string }
+
+5) DELETE /voice/sessions/{session_id}
+   - 설명: 세션 종료(상태 CLOSED로 변경)
+   - 인증: 피보호자 토큰 필요
+   - 응답(200): { "success": true, "message": "session closed" }
+
+
+[Invitations] (초대/교환 플로우, 일부 공개)
+1) POST /connections
+   - 설명: 초대 코드 생성(15분 유효). 공개
+   - 응답(200): { code: string, expires_at: ISO8601 string }
+
+2) GET /connections/{code}/status
+   - 설명: 초대 상태 조회(공개)
+   - 응답(200): { status: "pending"|"connected"|"used"|"expired", auth_code?: string }
+   - 비고: connected이고 auth_code 존재 시 auth_code 포함(1회용 교환 코드)
+
+3) POST /connections/accept
+   - 설명: 보호자 측에서 초대 수락 및 대상자 생성/연결 + auth_code 발급
+   - 인증: 보호자 토큰 필요
+   - 요청/동작: Connections의 /accept와 유사, 성공 시 Invitation에 auth_code 저장
+   - 응답(200): { "success": true, "dependent_id": number }
+
+4) POST /auth/dependent/exchange
+   - 설명: 대상자 앱이 code + auth_code로 대상자용 JWT 교환(공개)
+   - 요청(Body JSON): { code: string, auth_code: string }
+   - 응답(200): {
+       access_token: string,
+       token_type: "bearer",
+       expires_in: number(초),
+       dependent_id: number
+     }
+   - 오류: 400/401/409
+   - 비고: 발급 토큰은 sub="dependent:{id}", role="dependent"로 인코딩되며 보호자 전용 API 접근 불가
+
+
+[System] /system
+1) GET /system/health
+   - 설명: 헬스체크
+   - 응답(200): { status: "ok" }
+
+
+보안/권한 메모
+- 보호자 필수 엔드포인트는 내부적으로 get_current_user → require_caregiver로 검증합니다.
+- 보호자 토큰 요건: JWT payload.sub가 정수 문자열(사용자 ID)이어야 합니다.
+- 대상자 토큰은 보호자 전용 엔드포인트에서 401 처리됩니다.
+
+파일 업로드/저장
+- 업로드 엔드포인트: /voice/sessions/{id}/question, /voice/sessions/{id}/answer
+- 필드명: file
+- 저장 경로: MEDIA_ROOT/session-{session_id}/question.wav, answer.wav
+- 분석 실행: 외부 모듈 analysis.py가 실행되며 부재 시 실패 응답 반환
+
+예시 헤더
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+주요 제약/주의사항
+- /connections의 경로가 두 라우터(Connections, Invitations)에서 중복 정의됨. 제품 적용 전 통합 또는 프리픽스 조정 필요.
+- 데이터베이스 스키마는 앱 시작 시 자동 생성되지만, 스키마 변경 시에는 마이그레이션 도구(예: Alembic) 사용 권장.
+부가 다운로드(질문 파일 일괄 전송)
+- GET /voice/sessions/{session_id}/question/files
+  - 설명: 질문 음성들을 multipart/form-data로 한 번에 반환합니다.
+  - 인증: 피보호자 토큰 필요
+  - 응답: multipart/form-data; 각 part의 name="file", filename="a{i}.wav", Content-Type: audio/wav
+
+
+요청/응답 요약(헤더/바디 명시)
+
+[Auth]
+- POST /auth/signup
+  - 헤더: Content-Type: application/json
+  - 바디: { name: string, email: EmailStr, password: string, phone?: string }
+  - 응답(200): { success: boolean, user_id: number }
+
+- POST /auth/login
+  - 헤더: Content-Type: application/json
+  - 바디: { email: EmailStr, password: string }
+  - 응답(200): { access_token: string, token_type: "bearer" }
+
+- GET /auth/me
+  - 헤더: Authorization: Bearer 보호자토큰
+  - 응답(200): { id: number, role: string, email: EmailStr, name?: string }
+
+[Dependents] (보호자 전용)
+- POST /dependents
+  - 헤더: Authorization: Bearer 보호자토큰, Content-Type: application/json
+  - 바디: { name: string, birth_date?: "YYYY-MM-DD", sex?: "M"|"F"|"U", preferred_call_time?: "HH:MM", retry_count?: number, retry_interval_min?: number }
+  - 응답(200): { id: number, name: string, preferred_call_time?: string, last_state: number, last_exam_at?: string, last_mel_image?: string }
+
+- GET /dependents
+  - 헤더: Authorization: Bearer 보호자토큰
+  - 응답(200): { dependents: [ { id: number, name: string, preferred_call_time?: string, last_state: number, last_exam_at?: string, last_mel_image?: string } ] }
+
+- GET /dependents/{dep_id}
+  - 헤더: Authorization: Bearer 보호자토큰
+  - 응답(200): { id, name, preferred_call_time?, last_state, last_exam_at?, last_mel_image? }
+
+- PUT /dependents/{dep_id}
+  - 헤더: Authorization: Bearer 보호자토큰, Content-Type: application/json
+  - 바디: { name?, birth_date?, sex?, preferred_call_time?, retry_count?, retry_interval_min? }
+  - 응답(200): { success: true }
+
+- DELETE /dependents/{dep_id}
+  - 헤더: Authorization: Bearer 보호자토큰
+  - 응답(200): { success: true }
+
+[Analyses] (보호자 전용)
+- GET /dependents/{dep_id}/analyses/latest
+  - 헤더: Authorization: Bearer 보호자토큰
+  - 응답(200): { state: number, risk_score?: number, created_at: string(ISO8601) }
+
+- GET /dependents/{dep_id}/analyses/history
+  - 헤더: Authorization: Bearer 보호자토큰
+  - 응답(200): { analyses: [ { state: number, risk_score?: number, created_at: string } ] }
+
+[Invitations]
+- POST /connections (공개)
+  - 헤더/바디: 없음
+  - 응답(200): { code: string, expires_at: string(ISO8601) }
+
+- GET /connections/{code}/status (공개)
+  - 헤더: 없음
+  - 응답(200): { status: "pending"|"connected"|"used"|"expired", auth_code?: string }
+
+- POST /connections/accept (보호자 전용)
+  - 헤더: Authorization: Bearer 보호자토큰, Content-Type: application/json
+  - 바디: { code: string, dependent_id?: number, dependent?: { name: string, birth_date?, relation?, preferred_call_time?, retry_interval_min? } }
+  - 응답(200): { success: true, dependent_id: number }
+
+- POST /auth/dependent/exchange (공개)
+  - 헤더: Content-Type: application/json
+  - 바디: { code: string, auth_code: string }
+  - 응답(200): { access_token: string, token_type: "bearer", expires_in: number, dependent_id: number }
+
+[Voice] (피보호자 전용)
+- POST /voice/sessions
+  - 헤더: Authorization: Bearer 대상자토큰
+  - 바디: 없음
+  - 응답(200): { session_id: number, token: string, expires_in: number }
+
+- GET /voice/sessions/{session_id}/question
+  - 헤더: Authorization: Bearer 대상자토큰
+  - 응답(200): { files: [ { name: string, url: string } ] }
+
+- GET /voice/sessions/{session_id}/question/{filename}
+  - 헤더: Authorization: Bearer 대상자토큰
+  - 응답: audio/wav 바이너리
+
+- GET /voice/sessions/{session_id}/question/files
+  - 헤더: Authorization: Bearer 대상자토큰
+  - 응답: multipart/form-data; 각 part name="file", filename="a{i}.wav"
+
+- POST /voice/sessions/{session_id}/answer
+  - 헤더: Authorization: Bearer 대상자토큰, Content-Type: multipart/form-data
+  - 바디(form-data): files(최대 3개, 각 audio/wav)
+  - 응답(200): { success: true, score: number } 또는 { success: false, message: string }
+
+- DELETE /voice/sessions/{session_id}
+  - 헤더: Authorization: Bearer 대상자토큰
+  - 응답(200): { success: true, message: "session closed" }
+
+[System]
+- GET /system/health
+  - 헤더: 없음
+  - 응답(200): { status: "ok" }

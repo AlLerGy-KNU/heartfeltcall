@@ -10,6 +10,27 @@ class Settings(BaseSettings):
     database_url: str = Field(alias="DATABASE_URL")
     media_root: str = Field(alias="MEDIA_ROOT")
 
+    # OpenAI / GPT settings (optional)
+    openai_api_key: str | None = Field(default=None, alias="OPENAI_API_KEY")
+    openai_api_base: str | None = Field(default=None, alias="OPENAI_API_BASE")
+    gpt_questions_model: str = Field(default="gpt-4o-mini", alias="GPT_QUESTIONS_MODEL")
+    daily_questions_count: int = Field(default=3, alias="DAILY_QUESTIONS_COUNT")
+    gpt_questions_lang: str = Field(default="ko", alias="GPT_QUESTIONS_LANG")
+
+    # TTS settings (optional)
+    tts_provider: str = Field(default="openai", alias="TTS_PROVIDER")
+    tts_model: str = Field(default="gpt-4o-mini-tts", alias="TTS_MODEL")
+    tts_voice: str = Field(default="alloy", alias="TTS_VOICE")
+
+    # Global questions root (shared question WAVs)
+    questions_root: str = Field(default="q", alias="QUESTIONS_ROOT")
+
+    # AI model paths (optional)
+    mci_model_path: str | None = Field(default=None, alias="MCI_MODEL_PATH")
+
+    # External AI service (optional)
+    ai_service_url: str = Field(default="http://localhost:8001", alias="AI_SERVICE_URL")
+
     class Config:
         env_file = ".env"
         case_sensitive = True
