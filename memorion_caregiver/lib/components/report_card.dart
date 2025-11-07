@@ -4,20 +4,40 @@ import 'package:memorion_caregiver/const/colors.dart';
 import 'package:memorion_caregiver/const/other.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
-Widget reportCard(String title, String info, String tag, context) {
+Widget reportCard(String title, String info, String tag, String path, context) {
   return Container(
     decoration: BoxDecoration(color: AppColors.whiteMain, borderRadius: BorderRadius.circular(20)),
     padding: EdgeInsets.all(20),
     child: Column(
       children: [
-        redTag(),
+        tag == "위험" ? redTag() : tag == "주의" ? orangeTag() : tag == "안전" ? greenTag() : otherTag(),
         SizedBox(height: Other.gapS,),
-        Text("홍길동님에게 인지저하가 나타나고 있어요", style: Theme.of(context).textTheme.titleMedium, textAlign: TextAlign.center ),
+        Text(title, style: Theme.of(context).textTheme.titleMedium, textAlign: TextAlign.center ),
         SizedBox(height: Other.gapS,),
         Container(
           decoration: BoxDecoration(color: AppColors.white, borderRadius: BorderRadius.circular(20)),
           padding: EdgeInsets.all(12),
-          child: Text("홍길동님과 대화를 진행할때, 특정 기억을 반복적으로 잊으셨어요. 진단 설문을 통해 확인해본 결과 치매가 강하게 의심되니 병원에 방문하여 정확한 결과를 확인하길 권해드려요.")
+          child: Column(
+            children: [
+              Column(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.all(Other.gapSS),
+                    child: ClipRRect(
+                      borderRadius: BorderRadiusGeometry.circular(8),
+                      child: Image.asset(
+                        path,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                  Text("변환된 음성 이미지", style: Theme.of(context).textTheme.bodySmall),
+                ],
+              ),
+              SizedBox(height: Other.gapS,),
+              Text(info),
+            ],
+          )
         )
       ],
     ),
@@ -69,8 +89,8 @@ Widget buildMonthlyBarCard({
   // Look & feel
   double height = 260,
   double barCornerRadius = 6,
-  double barWidthRatio = 0.5,
-  EdgeInsetsGeometry outerPadding = const EdgeInsets.fromLTRB(12, 8, 12, 12),
+  double barWidthRatio = 0.4,
+  EdgeInsetsGeometry outerPadding = const EdgeInsets.fromLTRB(4, 4, 4, 4),
   Color cardColor = AppColors.white,
 }) {
   // Color mapper by level
@@ -97,10 +117,11 @@ Widget buildMonthlyBarCard({
                   majorGridLines: const MajorGridLines(width: 0),
                 ),
                 primaryYAxis: NumericAxis(
+                  labelStyle: const TextStyle(fontSize: 14),
                   minimum: 0,
                   maximum: 100,
-                  interval: 20,
-                  labelFormat: '{value}%',
+                  interval: 30,
+                  labelFormat: '{value}',
                   axisLine: const AxisLine(width: 0),
                   majorTickLines: const MajorTickLines(size: 0),
                 ),
@@ -127,7 +148,7 @@ Widget buildMonthlyBarCard({
             // Legend (정상 / 주의 / 위험)
             Wrap(
               alignment: WrapAlignment.center,
-              spacing: 16,
+              spacing: 12,
               runSpacing: 6,
               children: legendOrder.map((label) {
                 return Row(

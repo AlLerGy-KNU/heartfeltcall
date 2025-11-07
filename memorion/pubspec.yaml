@@ -43,6 +43,7 @@ dependencies:
   path_provider: ^2.1.5
   flutter_local_notifications: ^19.5.0
   timezone: ^0.10.1
+  audioplayers: ^6.5.1
 
 dev_dependencies:
   flutter_test:
@@ -68,6 +69,9 @@ flutter:
   assets:
     - .env
     - assets/images/memorion_logo.svg
+    - assets/voices/a1.wav
+    - assets/voices/a2.wav
+    - assets/voices/a3.wav
   fonts:
     - family: Pretendard
       fonts:

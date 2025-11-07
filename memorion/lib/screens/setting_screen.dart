@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:memorion/const/other.dart';
 import 'package:memorion/const/value_name.dart';
+import 'package:memorion/screens/init_screen.dart';
 import 'package:memorion/services/local_data_manager.dart';
 
 import '../const/colors.dart';
@@ -77,7 +78,15 @@ class _SettingScreenState extends State<SettingScreen> {
                 children: [
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: ()=>{},
+                      onPressed: ()=>{
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (_) => InitScreen()),
+                        ),
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("보호자와 연결이 끊어졌습니다")),
+                        )
+                      },
                       style: Theme.of(context).elevatedButtonTheme.style?.copyWith(
                         padding: WidgetStatePropertyAll(EdgeInsets.all(8))
                       ),

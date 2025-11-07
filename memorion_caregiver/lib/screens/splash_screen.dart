@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:memorion_caregiver/const/colors.dart';
 import 'package:memorion_caregiver/const/other.dart';
 import 'package:memorion_caregiver/screens/signin_screen.dart';
@@ -30,30 +31,27 @@ class _SplashScreenState extends State<SplashScreen> {
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 32),
         child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisSize: MainAxisSize.max,
-            children: [
-              SizedBox(height: Other.margin,),
-              Row(
+          child: Center(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisSize: MainAxisSize.max,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(height: 120,),
+                Row(
+                  mainAxisSize: MainAxisSize.max,
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(3, (index) {
-                    return Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 4),
-                      width: 10,
-                      height: 10,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: (pageCnt == index) ? AppColors.main : Colors.grey[400],
-                      ),
-                    );
-                  }),
+                  children: [
+                    SvgPicture.asset("assets/images/memorion_logo.svg", width: 60,),
+                    Text("따듯한전화", style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                      color: AppColors.main
+                    ), textAlign: TextAlign.center,)
+                  ],
                 ),
-              SizedBox(height: Other.gapM,),
-              Container(width: 320, height: 320, decoration: BoxDecoration(borderRadius: BorderRadius.circular(20), color: AppColors.whiteGray),),
-              SizedBox(height: Other.gapM,),
-              Text("간혈적으로 나타나는 증상을 잡기 위해\n치매는 꾸준히 검사해야합니다", style: Theme.of(context).textTheme.titleMedium, textAlign: TextAlign.center,),
-            ],
+                SizedBox(height: Other.gapM,),
+                Text("독거어르신을 위한\n치매건강관리시스템", style: Theme.of(context).textTheme.titleMedium, textAlign: TextAlign.center,),
+              ],
+            ),
           ),
         ),
       ),

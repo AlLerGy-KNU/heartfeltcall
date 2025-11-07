@@ -89,12 +89,12 @@ class _SignupScreenState extends State<SignupScreen> {
     final hasLower = RegExp(r'[a-z]').hasMatch(password);
     final hasDigit = RegExp(r'\d').hasMatch(password);
     final hasSpecial = RegExp(r'[!@#$%^&*(),.?":{}|<>_\-\[\]\\;/+=]').hasMatch(password);
-    final hasMinLength = password.length >= 8;
+    final hasMinLength = password.length >= 12;
 
     if (!(hasUpper && hasLower && hasDigit && hasSpecial && hasMinLength)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("비밀번호는 8자 이상, 대문자/소문자/숫자/특수문자를 포함해야 합니다."),
+        const SnackBar( 
+          content: Text("비밀번호는 12자 이상, 대문자/소문자/숫자/특수문자를 포함해야 합니다."),
         ),
       );
       return;
