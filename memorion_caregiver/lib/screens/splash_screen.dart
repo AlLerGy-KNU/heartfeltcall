@@ -2,15 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:memorion_caregiver/const/colors.dart';
 import 'package:memorion_caregiver/const/other.dart';
+import 'package:memorion_caregiver/screens/main_screen.dart';
 import 'package:memorion_caregiver/screens/signin_screen.dart';
 import 'package:memorion_caregiver/screens/signup_screen.dart';
+import 'package:memorion_caregiver/services/api_client.dart';
 
 class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
   @override
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  final apiClient = ApiClient();
+
   @override
   void initState() {
     super.initState();
@@ -21,6 +27,10 @@ class _SplashScreenState extends State<SplashScreen> {
     //     MaterialPageRoute(builder: (_) => const SigninScreen()),
     //   );
     // });
+    if (apiClient.accessToken != null) {
+      // 토큰 상태 검증
+      Navigator.push(context, MaterialPageRoute(builder: (context) => MainScreen()));
+    }
   }
 
   int pageCnt = 0;

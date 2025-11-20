@@ -5,7 +5,6 @@ import 'package:memorion/screens/call_screen.dart';
 import 'package:memorion/screens/home_screen.dart';
 import 'package:memorion/services/local_data_manager.dart';
 import 'package:memorion/services/api_client.dart';
-import 'package:memorion/services/connection_service.dart';
 
 class InitScreen extends StatefulWidget {
   const InitScreen({super.key});
@@ -18,7 +17,6 @@ class _InitScreenState extends State<InitScreen> {
   //service
   late LocalDataManager localDataManager;
   late ApiClient _apiClient;
-  late ConnectionService _connectionService;
 
   bool _isSubmitting = false;
   String? _lastCode;
@@ -38,7 +36,7 @@ class _InitScreenState extends State<InitScreen> {
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const HomeScreen()),
       (Route<dynamic> route) => false,
-    );
+    ); 
   }
 
   @override
@@ -48,7 +46,6 @@ class _InitScreenState extends State<InitScreen> {
     localDataManager = LocalDataManager();
 
     _apiClient = ApiClient();
-    _connectionService = ConnectionService(_apiClient);
   }
 
   @override

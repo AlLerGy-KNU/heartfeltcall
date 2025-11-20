@@ -1,10 +1,46 @@
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
+import 'package:memorion_caregiver/services/local_data_manager.dart';
 
 class ApiClient {
-  final String baseUrl = dotenv.env["BASE_URL"] ?? "";
-  String? accessToken;
+  ApiClient._internal();
+  static final ApiClient instance = ApiClient._internal();
+  factory ApiClient() => instance;
+
+  String? baseUrl;
+  String? _accessToken;
+  String? get accessToken => _accessToken;
+
+  Future<void> init() async {
+    _accessToken = LocalDataManager.getAccessToken();
+    baseUrl = dotenv.env["BASE_URL"]!;
+  }
+
+  set accessToken(String? token) {
+    _accessToken = token;
+    if (token == null) {
+      LocalDataManager.clearAccessToken();
+    } else {
+      LocalDataManager.setAccessToken(token);
+    }
+  }
+
+  /// Common headers
+  Map<String, String> _headers({bool useAuth = false}) {
+    final headers = <String, String>{
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+    };
+
+    if (useAuth) {
+      final token = LocalDataManager.getAccessToken();
+      if (token != null && token.isNotEmpty) {
+        headers["Authorization"] = "Bearer $token";
+      }
+    }
+    return headers;
+  }
 
   /// Build full uri
   Uri _uri(String path, [Map<String, dynamic>? query]) {
@@ -18,13 +54,6 @@ class ApiClient {
     // toString() to make sure all values are String
   }
 
-  /// Common headers
-  Map<String, String> _headers({bool useAuth = false}) {
-    return {
-      "Content-Type": "application/json",
-      if (useAuth && accessToken != null) "Authorization": "Bearer $accessToken",
-    };
-  }
 
   /// POST request
   Future<http.Response> post(
