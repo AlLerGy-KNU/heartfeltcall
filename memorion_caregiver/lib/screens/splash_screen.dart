@@ -6,6 +6,7 @@ import 'package:memorion_caregiver/screens/main_screen.dart';
 import 'package:memorion_caregiver/screens/signin_screen.dart';
 import 'package:memorion_caregiver/screens/signup_screen.dart';
 import 'package:memorion_caregiver/services/api_client.dart';
+import 'package:memorion_caregiver/services/auth_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -16,6 +17,7 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   final apiClient = ApiClient();
+  late AuthService authService;
 
   @override
   void initState() {
@@ -27,10 +29,40 @@ class _SplashScreenState extends State<SplashScreen> {
     //     MaterialPageRoute(builder: (_) => const SigninScreen()),
     //   );
     // });
-    if (apiClient.accessToken != null) {
-      // 토큰 상태 검증
-      Navigator.push(context, MaterialPageRoute(builder: (context) => MainScreen()));
-    }
+    authService = AuthService(apiClient);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // TODO: 토큰 상태 검증
+      final token = apiClient.accessToken;
+
+      // 1. If no token → go to login/init page
+      if (token == null || token.isEmpty) {
+        return;
+      }
+
+      try {
+        // 2. Send GET /auth/me to verify token
+        final result = await AuthService(apiClient).getMe();
+
+        if (!mounted) return;
+
+        // 3. If token is valid → status 200
+        if (result["status"] == 200) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const MainScreen()),
+          );
+        } else {
+          // 4. Invalid token → clear token & go InitScreen
+          apiClient.clearToken();
+        }
+      } catch (e) {
+        // 5. Any error → treat as invalid token
+        apiClient.clearToken();
+
+        if (!mounted) return;
+      }
+    });
   }
 
   int pageCnt = 0;

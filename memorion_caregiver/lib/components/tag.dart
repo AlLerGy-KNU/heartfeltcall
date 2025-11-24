@@ -37,10 +37,21 @@ Widget greenTag() {
 Widget otherTag() {
   return Container(
     decoration: BoxDecoration(
-      color: AppColors.effectMain.withAlpha(51),
+      color: AppColors.gray.withAlpha(51),
       borderRadius: BorderRadius.circular(20)
     ),
     padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-    child: Text("연락불가", style: TextStyle(color: AppColors.effectMain, fontSize: 16, fontWeight: FontWeight.w500)),
+    child: Text("전화실패", style: TextStyle(color: AppColors.gray, fontSize: 16, fontWeight: FontWeight.w500)),
+  );
+}
+
+Widget settingTag() {
+  return Container(
+    decoration: BoxDecoration(
+      color: AppColors.gray.withAlpha(51),
+      borderRadius: BorderRadius.circular(20)
+    ),
+    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+    child: Text("기록없음", style: TextStyle(color: AppColors.gray, fontSize: 16, fontWeight: FontWeight.w500)),
   );
 }

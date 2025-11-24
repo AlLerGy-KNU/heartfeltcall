@@ -5,6 +5,7 @@ import 'package:memorion_caregiver/components/shimmer_loading.dart';
 import 'package:memorion_caregiver/components/tag.dart';
 import 'package:memorion_caregiver/const/colors.dart';
 import 'package:memorion_caregiver/const/other.dart';
+import 'package:memorion_caregiver/const/value_name.dart';
 import 'package:memorion_caregiver/screens/add_career_screen.dart';
 import 'package:memorion_caregiver/screens/more_screen.dart';
 import 'package:memorion_caregiver/services/api_client.dart';
@@ -99,7 +100,7 @@ class _MainScreenState extends State<MainScreen> {
         child: ListView(
           children: const [
             SizedBox(height: 200),
-            Center(child: Text("No dependents found.")),
+            Center(child: Text("등록된 피보호자가 없어요.")),
           ],
         ),
       );
@@ -112,14 +113,33 @@ class _MainScreenState extends State<MainScreen> {
         itemBuilder: (context, index) {
           final item = _dependents[index] as Map<String, dynamic>;
           final name = item["name"] ?? "";
-          final birthDate = item["birth_date"] ?? "";
-          final relation = item["relation"] ?? "";
+          final stat = item["last_state"] ?? -1;
 
-          return ListTile(
-            leading: const CircleAvatar(child: Icon(Icons.person)),
-            title: Text(name),
-            subtitle: Text("$relation • $birthDate"),
-            onTap: () {},
+          return Padding(
+            padding: EdgeInsets.symmetric(vertical: Other.gapS, horizontal: Other.margin),
+            child: Container(
+              padding: EdgeInsets.symmetric(vertical: Other.gapSS, horizontal: Other.gapSS),
+              decoration: BoxDecoration(
+                color: AppColors.whiteMain,
+                borderRadius: BorderRadius.circular(20)
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  Expanded(
+                    child: ListTile(
+                      title: Text(name, style: Theme.of(context).textTheme.titleMedium,),
+                      subtitle: Text(statusText[stat] ?? "알 수 없는 상태"),
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => MoreScreen(item: item))),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: statusTag[stat] ?? otherTag(),
+                  )
+                ],
+              ),
+            ),
           );
         },
       ),

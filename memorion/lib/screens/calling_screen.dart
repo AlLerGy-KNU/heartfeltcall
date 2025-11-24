@@ -47,6 +47,11 @@ class _CallingScreenState extends State<CallingScreen> {
     status = "말하는중";
     _play();
   }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
   
   Future<void> _startVoiceRecord() async {
     await recorder.start();
@@ -79,17 +84,17 @@ class _CallingScreenState extends State<CallingScreen> {
 
   void _play() async {
     // This will block in async until playback is finished
+    if (!mounted) return;
     setState(() {
       status = "말하는중";
     });
-
-    final finished = await playWav('voices/a$audioCnt.wav');
-    setState(() {
-      audioCnt+=1;  
-    });
     
+    final finished = await playWav('voices/a$audioCnt.wav');
+    
+    if (!mounted) return;
     if (finished) {
       setState(() {
+        audioCnt+=1;  
         status = "듣는중";
       });
     }

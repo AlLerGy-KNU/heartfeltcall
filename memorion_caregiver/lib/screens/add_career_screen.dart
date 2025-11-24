@@ -1,8 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:memorion_caregiver/const/colors.dart';
 import 'package:memorion_caregiver/const/other.dart';
 import 'package:memorion_caregiver/screens/main_screen.dart';
 import 'package:memorion_caregiver/services/api_client.dart';
 import 'package:memorion_caregiver/services/dependent_service.dart';
+import 'package:memorion_caregiver/services/invitation_service.dart';
 
 class AddCareerScreen extends StatefulWidget {
   const AddCareerScreen({super.key});
@@ -21,12 +26,14 @@ class _AddCareerScreenState extends State<AddCareerScreen> {
   final _callRetryCtrl = TextEditingController();
   final _callIntervalCtrl = TextEditingController();
 
-  String? gender = 'male';
-  
   late final ApiClient _apiClient;
   late final DependentService _dependentService;
 
+  // click stat
   bool _isSubmitting = false;
+  
+  // form init
+  String? gender = 'M';
 
   @override
   void initState() {
@@ -106,8 +113,6 @@ class _AddCareerScreenState extends State<AddCareerScreen> {
       );
     }
   }
-
-  
   
   @override
   Widget build(BuildContext context) {
@@ -122,13 +127,7 @@ class _AddCareerScreenState extends State<AddCareerScreen> {
             children: [
               Text("피보호자의 정보를 \n입력해주세요", style: Theme.of(context).textTheme.titleLarge,),
               SizedBox(height: Other.gapM,),  
-              Text("피보호자 인증코드", style: Theme.of(context).textTheme.titleSmall,),
-              TextFormField(
-                decoration: const InputDecoration(
-                  labelText: '인증코드 *',
-                  hintText: '12자리 인증코드를 입력해주세요',
-                ),
-              ),
+              
               SizedBox(height: Other.gapM,),  
               Text("피보호자 인적사항", style: Theme.of(context).textTheme.titleSmall,),
               TextFormField(
@@ -158,10 +157,10 @@ class _AddCareerScreenState extends State<AddCareerScreen> {
                         gender = val;
                       });
                     },
-                    dropdownMenuEntries: const [
-                      DropdownMenuEntry(value: 'male', label: '남'),
-                      DropdownMenuEntry(value: 'female', label: '여'),
-                      DropdownMenuEntry(value: 'other', label: '기타'),
+                    dropdownMenuEntries: [
+                      DropdownMenuEntry(value: 'M', label: '남'),
+                      DropdownMenuEntry(value: 'F', label: '여'),
+                      DropdownMenuEntry(value: 'O', label: '기타         '),
                     ],
                   ),
                 ],
@@ -180,7 +179,7 @@ class _AddCareerScreenState extends State<AddCareerScreen> {
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
                   labelText: '통화시각 *',
-                  hintText: 'HHMM',
+                  hintText: 'HH:MM',
                 ),
               ),
               SizedBox(height: Other.gapS,),  
@@ -207,7 +206,10 @@ class _AddCareerScreenState extends State<AddCareerScreen> {
       bottomNavigationBar: Padding(
         padding: EdgeInsets.only(bottom: Other.gapM, right: Other.gapM, left: Other.gapM, top: 0),
         child: ElevatedButton(
-          onPressed: _isSubmitting ? null : _onSubmit,
+          onPressed: (_isSubmitting) ? null : _onSubmit,
+          style: ButtonStyle(
+            // backgroundColor: WidgetStatePropertyAll(_inviteStatus != "connected" ? AppColors.whiteGray : null)
+          ),
           child: _isSubmitting
               ? const SizedBox(
                   height: 20,

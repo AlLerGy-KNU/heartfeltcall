@@ -110,4 +110,41 @@ class AuthService {
       };
     }
   }
+
+    /// Fetch current caregiver user info
+  /// return: { "message": ..., "status": ..., "data": ... }
+  Future<Map<String, dynamic>> getMe() async {
+    try {
+      // GET /auth/me with caregiver token
+      final http.Response resp = await client.get(
+        "/auth/me",
+        // authentication required
+        useAuth: true,
+      );
+
+      // Success (200)
+      if (resp.statusCode == 200) {
+        final Map<String, dynamic> data =
+            resp.body.isNotEmpty ? json.decode(resp.body) : <String, dynamic>{};
+
+        return {
+          "message": "fetch success",
+          "status": resp.statusCode,
+          "data": data,
+        };
+      }
+
+      // Fail
+      return {
+        "message": "fetch failed: ${resp.body}",
+        "status": resp.statusCode,
+      };
+    } catch (e) {
+      // Error (network, unexpected, etc.)
+      return {
+        "message": "error: $e",
+        "status": 500,
+      };
+    }
+  }
 }

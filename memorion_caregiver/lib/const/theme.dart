@@ -121,11 +121,36 @@ ThemeData themeData() {
         color: AppColors.gray,
       ),
     ),
+    // dropdownMenuTheme: DropdownMenuThemeData(
+    //   // 드롭다운으로 펼쳐졌을 때 메뉴 박스 스타일
+    //   menuStyle: MenuStyle(
+    //     backgroundColor: WidgetStatePropertyAll(AppColors.white),
+    //     // elevation: const WidgetStatePropertyAll(0),
+    //   ),
+    // ),
+
     dropdownMenuTheme: DropdownMenuThemeData(
-      // 드롭다운으로 펼쳐졌을 때 메뉴 박스 스타일
+      textStyle: TextStyle(
+        fontSize: 16,
+        color: Colors.black,
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey),
+        ),
+      ),
       menuStyle: MenuStyle(
-        backgroundColor: WidgetStatePropertyAll(AppColors.white),
-        // elevation: const WidgetStatePropertyAll(0),
+        backgroundColor: WidgetStateProperty.all(Colors.white),
+        elevation: const WidgetStatePropertyAll(1),
+        padding: WidgetStateProperty.all(EdgeInsets.symmetric(vertical: 4)),
+        shape: WidgetStateProperty.all(
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
       ),
     ),
   );

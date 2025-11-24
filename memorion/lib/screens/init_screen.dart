@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:timezone/timezone.dart' as tz;
+import 'package:flutter/services.dart';
+import 'package:memorion/const/colors.dart';
+import 'package:memorion/services/invitation_service.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:memorion/const/other.dart';
-import 'package:memorion/screens/call_screen.dart';
 import 'package:memorion/screens/home_screen.dart';
 import 'package:memorion/services/local_data_manager.dart';
 import 'package:memorion/services/api_client.dart';
@@ -17,26 +21,29 @@ class _InitScreenState extends State<InitScreen> {
   //service
   late LocalDataManager localDataManager;
   late ApiClient _apiClient;
+  
+  // click stat
+  bool _isCreateCode = false;
+  
+  // code init
+  String? code;
+  DateTime? expiresAt;
 
-  bool _isSubmitting = false;
-  String? _lastCode;
+  Timer? _countdownTimer;
+  Duration _remaining = Duration.zero;
 
-  Future<void> _onSubmit() async {
-    final whenOpen = DateTime.now().add(const Duration(seconds: 10));
-    final tzTime = tz.TZDateTime.from(whenOpen, tz.local);
-    // await scheduleCallSeries(
-    //   tzTime,
-    //   maxAttempts: 3,
-    //   interval: const Duration(minutes: 1),
-    // );
-    await test10sCall();
+  Timer? _statusTimer;
+  String _inviteStatus = "pending"; // pending | connected | expired | used
 
-    if (!mounted) return;
+  String get _remainingText {
+    if (code == null || expiresAt == null || _remaining.inSeconds <= 0) {
+      return "만료됨";
+    }
 
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const HomeScreen()),
-      (Route<dynamic> route) => false,
-    ); 
+    final minutes = _remaining.inMinutes;
+    final seconds = _remaining.inSeconds % 60;
+
+    return "${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}";
   }
 
   @override
@@ -53,22 +60,232 @@ class _InitScreenState extends State<InitScreen> {
     super.dispose();
   }
 
+  Future<void> _createCode() async {
+    // If we already have a valid code → block
+    if (code != null && expiresAt != null) {
+      final now = DateTime.now().toUtc();
+      if (now.isBefore(expiresAt!)) {
+        // still valid → do not create new code
+        await shareMessage();
+        return;
+      } else {
+        // expired → clear old values
+        code = null;
+        expiresAt = null;
+      }
+    }
+
+    setState(() {
+      _isCreateCode = true;
+    });
+
+    // call API
+    final result = await InvitationService(_apiClient).createInvitation();
+
+    setState(() {
+      _isCreateCode = false;
+    });
+
+    if (!mounted) return;
+
+    // === Error case ===
+    if (result["status"] != 200) {
+      // Show error snackbar or dialog
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed: ${result["message"]}")),
+      );
+      return;
+    }
+
+    // === Success case ===
+    final data = result["data"];
+    final newCode = data["code"] as String?;
+    final expireStr = data["expires_at"] as String?;
+
+    if (newCode == null || expireStr == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Invalid server response")),
+      );
+      return;
+    }
+
+    // parse to DateTime
+    final expireTime = DateTime.parse(expireStr).toUtc();
+
+    setState(() {
+      code = newCode;
+      expiresAt = expireTime;
+      _remaining = expireTime.difference(DateTime.now().toUtc());
+    });
+
+    await shareMessage();
+
+    _startCountdown();
+    _startStatusPolling();
+  }
+
+  Future<void> shareMessage() async {
+    final message = '따듯한 전화 앱의 보호자 연결 코드: $code\n'
+        '앱에서 이 코드를 입력하면 서로 연결할 수 있어요.';
+    await SharePlus.instance.share(
+      ShareParams(text: message, title: '연결코드 공유'),
+    );
+  }
+
+  void _startCountdown() {
+    _countdownTimer?.cancel();
+
+    if (expiresAt == null) return;
+
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      final now = DateTime.now().toUtc();
+      final expire = expiresAt!;
+      final diff = expire.difference(now);
+
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+
+      if (diff.inSeconds <= 0) {
+        // expire
+        timer.cancel();
+        setState(() {
+          _remaining = Duration.zero;
+          code = null;
+        });
+      } else {
+        setState(() {
+          _remaining = diff;
+        });
+      }
+    });
+  }
+  
+  void _startStatusPolling() {
+    // stop existing timer
+    _statusTimer?.cancel();
+
+    if (code == null) return;
+
+    _statusTimer = Timer.periodic(const Duration(seconds: 2), (_) async {
+      final result = await InvitationService(_apiClient)
+          .getInvitationStatus(code: code!);
+
+      if (!mounted) return;
+
+      if (result["status"] != 200) {
+        return;
+      }
+
+      final data = result["data"];
+      final status = data["status"] as String;
+
+      setState(() {
+        _inviteStatus = status;
+      });
+
+      // 1) 인증 완료
+      if (status == "connected") {
+        _statusTimer?.cancel();
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const HomeScreen()),
+          (Route<dynamic> route) => false,
+        ); 
+      }
+
+      // 2) 만료된 경우
+      if (status == "expired") {
+        _statusTimer?.cancel();
+        setState(() {
+          code = null;
+          expiresAt = null;
+          _remaining = Duration.zero;
+        });
+        return;
+      }
+
+      print("[DEBUG] check function");
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Padding(
         padding: EdgeInsets.all(Other.margin),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             SizedBox(height: 40,),
             Text("안녕하세요!\n앱을 사용하기 위해\n보호자와 연결해주세요."),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text("인증코드", style: Theme.of(context).textTheme.titleSmall,),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: Other.gapS),
+                        child: (_inviteStatus == "connected") ?
+                          Text(
+                            "인증 완료",
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: AppColors.green,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          )
+                        : (_inviteStatus == "expired") ?
+                          Text(
+                            "만료됨",
+                            style: Theme.of(context).textTheme.bodySmall
+                          ) : code != null ? Text(
+                            _remainingText,
+                            style: Theme.of(context).textTheme.bodySmall
+                          ) : null,
+                        // code != null ? Text(_remainingText) : null,
+                      )
+                    ],
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Flexible(child: Padding(
+                        padding: const EdgeInsets.only(right: 36.0),
+                        child: Text(code ?? "연결코드 보내기 \n버튼을 눌러주세요", style: Theme.of(context).textTheme.bodySmall!.copyWith(fontSize: 24)),
+                      )),
+                      TextButton(onPressed: code == null ? null : () async {
+                        await Clipboard.setData(ClipboardData(text: code!));
+              
+                        if (!mounted) return;
+              
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("코드를 복사했습니다"),
+                          ),
+                        );
+                      }, child: Icon(Icons.copy, size: 28,)),
+                    ],
+                  ),
+                  SizedBox(height: 20,)
+                ],
+              ),
+            ),
           ],
         ),
       ),
+      
       bottomNavigationBar: Padding(
         padding: EdgeInsets.only(left: Other.margin, right: Other.margin, bottom: Other.margin),
-        child: ElevatedButton(onPressed: _onSubmit, child: Text("연결코드 보내기")),
+        child: ElevatedButton(onPressed: _createCode, 
+        child: _isCreateCode ? SizedBox(
+            height: 40,
+            width: 40,
+            child: CircularProgressIndicator(strokeWidth: 2)
+          ) : Text("연결코드 보내기")
+        ),
       ),
     );
   }

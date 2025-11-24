@@ -2,21 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:memorion_caregiver/components/tag.dart';
 import 'package:memorion_caregiver/const/colors.dart';
 import 'package:memorion_caregiver/const/other.dart';
+import 'package:memorion_caregiver/const/value_name.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
-Widget reportCard(String title, String info, String tag, String path, context) {
+Widget reportCard(String path, final item, context) {
+  final stat = item["last_state"] ?? -1;
+
   return Container(
     decoration: BoxDecoration(color: AppColors.whiteMain, borderRadius: BorderRadius.circular(20)),
     padding: EdgeInsets.all(20),
     child: Column(
       children: [
-        tag == "위험" ? redTag() : tag == "주의" ? orangeTag() : tag == "안전" ? greenTag() : otherTag(),
+        statusTag[stat] ?? otherTag(),
         SizedBox(height: Other.gapS,),
-        Text(title, style: Theme.of(context).textTheme.titleMedium, textAlign: TextAlign.center ),
+        Text(statusText[stat]!, style: Theme.of(context).textTheme.titleMedium, textAlign: TextAlign.center ),
         SizedBox(height: Other.gapS,),
         Container(
           decoration: BoxDecoration(color: AppColors.white, borderRadius: BorderRadius.circular(20)),
-          padding: EdgeInsets.all(12),
+          padding: EdgeInsets.only(top: 12, right: 12, left: 12, bottom: 0),
           child: Column(
             children: [
               Column(
@@ -35,7 +38,7 @@ Widget reportCard(String title, String info, String tag, String path, context) {
                 ],
               ),
               SizedBox(height: Other.gapS,),
-              Text(info),
+              Text(statusInfoText[stat]!),
             ],
           )
         )

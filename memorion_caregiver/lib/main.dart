@@ -9,8 +9,8 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // 바인딩 초기화
   await LocalDataManager.init(); // 저장소 초기화
   final apiClient = ApiClient();
-  await apiClient.init(); 
   await dotenv.load(fileName: ".env");
+  await apiClient.init(); 
   runApp(const Memorion());
 }
 

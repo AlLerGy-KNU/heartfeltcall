@@ -120,4 +120,8 @@ class ApiClient {
     if (files != null) req.files.addAll(files);
     return await req.send();
   }
+
+  void clearToken() {
+    accessToken = null;
+  }
 }

@@ -6,20 +6,30 @@ import 'package:memorion_caregiver/screens/edit_career_screen.dart';
 import 'package:memorion_caregiver/screens/report_screen.dart';
 
 class MoreScreen extends StatefulWidget {
-  final String name;
-  final String id;
+  final item;
 
-  const MoreScreen({super.key, required this.name, required this.id});
+  const MoreScreen({super.key, required this.item});
 
   @override
   State<MoreScreen> createState() => _MoreScreenState();
 }
 
 class _MoreScreenState extends State<MoreScreen> {
+  late String name;
+  late double stat;
+
+  @override
+  void initState() {
+    super.initState();
+
+    name = widget.item["name"];
+    stat = widget.item["last_state"];
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("${widget.name}님"), actions: [
+      appBar: AppBar(title: Text("$name님"), actions: [
         TextButton(onPressed: ()=>{}, child: Row(
           children: [
             Text("2025년 10월 12일", style: Theme.of(context).textTheme.titleMedium!.copyWith(color: AppColors.main),),
@@ -36,7 +46,7 @@ class _MoreScreenState extends State<MoreScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(height: Other.margin),
-              reportCard("${widget.name}님에게서\n인지저하가 나타나고 있어요", "음성을 확인해본 결과 치매가 의심되니 병원에 방문하여 정확한 결과를 확인하길 권해드려요.", "위험", "assets/images/test_result.png", context),
+              reportCard("assets/images/test_result.png", widget.item, context),
               SizedBox(height: Other.gapM,),
             ],
           ),
@@ -49,15 +59,15 @@ class _MoreScreenState extends State<MoreScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.max,
           children: [
-            Expanded(child: ElevatedButton(onPressed: () => {Navigator.push(context, MaterialPageRoute(builder: (context) => EditCareerScreen()))}, child: Text("정보수정"),)),
+            Expanded(child: ElevatedButton(onPressed: () => {Navigator.push(context, MaterialPageRoute(builder: (context) => EditCareerScreen(item: widget.item,)))}, child: Text("정보수정"),)),
             SizedBox(width: Other.gapS,),
             Expanded(
               child: ElevatedButton(
-                onPressed: () => {Navigator.push(context, MaterialPageRoute(builder: (context) => ReportScreen()))}, child: Text("리포트"),
+                onPressed: () => {Navigator.push(context, MaterialPageRoute(builder: (context) => ReportScreen()))},
                 style: Theme.of(context).elevatedButtonTheme.style?.copyWith(
                   backgroundColor: WidgetStatePropertyAll(AppColors.whiteGray),
                   foregroundColor: WidgetStatePropertyAll(AppColors.black)
-                )
+                ), child: Text("리포트")
               )),
           ],
         ),
