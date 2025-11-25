@@ -22,6 +22,7 @@ Widget reportCard(String path, final item, context) {
           padding: EdgeInsets.only(top: 12, right: 12, left: 12, bottom: 0),
           child: Column(
             children: [
+              (stat == -1) ? SizedBox() : 
               Column(
                 children: [
                   Padding(

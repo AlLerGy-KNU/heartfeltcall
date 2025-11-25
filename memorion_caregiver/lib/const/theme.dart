@@ -30,20 +30,21 @@ ThemeData themeData() {
         TargetPlatform.iOS: NoTransitionsBuilder(),
       },  
     ),
+    
 
-    appBarTheme: const AppBarTheme(
-      foregroundColor: AppColors.black,
-      backgroundColor: Colors.transparent,     // 배경 투명
-      surfaceTintColor: Colors.transparent,    // Material3 틴트 제거
-      elevation: 0,                            // 그림자 제거
-      scrolledUnderElevation: 0,               // 스크롤 시 생기는 반투명 음영 제거
-      iconTheme: IconThemeData(color: AppColors.black), // 아이콘 색상(필요 시)
-      titleTextStyle: TextStyle(
-        color: AppColors.black,
-        fontSize: 20,
-        fontWeight: FontWeight.bold,
-      ),
-    ),
+    // appBarTheme: const AppBarTheme(
+    //   foregroundColor: AppColors.black,
+    //   backgroundColor: Colors.transparent,     // 배경 투명
+    //   surfaceTintColor: Colors.transparent,    // Material3 틴트 제거
+    //   elevation: 0,                            // 그림자 제거
+    //   scrolledUnderElevation: 0,               // 스크롤 시 생기는 반투명 음영 제거
+    //   iconTheme: IconThemeData(color: AppColors.black), // 아이콘 색상(필요 시)
+    //   titleTextStyle: TextStyle(
+    //     color: AppColors.black,
+    //     fontSize: 20,
+    //     fontWeight: FontWeight.bold,
+    //   ),
+    // ),
 
     floatingActionButtonTheme: const FloatingActionButtonThemeData(
       backgroundColor: AppColors.main, // 필요시 색상 지정

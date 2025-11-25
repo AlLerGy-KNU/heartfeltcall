@@ -32,7 +32,6 @@ class _SplashScreenState extends State<SplashScreen> {
     authService = AuthService(apiClient);
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      // TODO: 토큰 상태 검증
       final token = apiClient.accessToken;
 
       // 1. If no token → go to login/init page

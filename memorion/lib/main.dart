@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:memorion/services/api_client.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:memorion/const/theme.dart';
@@ -16,13 +17,14 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
   
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // 바인딩 초기화
-
-  await dotenv.load(fileName: ".env");
   await LocalDataManager.init(); // 저장소 초기화
+  final apiClient = ApiClient();
+  await dotenv.load(fileName: ".env");
+  await apiClient.init(); 
 
   // timezone init
   tz.initializeTimeZones();
-  // 한국이면
+  // 한국
   tz.setLocalLocation(tz.getLocation('Asia/Seoul'));
 
 

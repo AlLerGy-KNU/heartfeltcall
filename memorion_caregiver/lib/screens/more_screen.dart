@@ -46,7 +46,7 @@ class _MoreScreenState extends State<MoreScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(height: Other.margin),
-              reportCard("assets/images/test_result.png", widget.item, context),
+              reportCard("assets/images/mel/d01.png", widget.item, context),
               SizedBox(height: Other.gapM,),
             ],
           ),

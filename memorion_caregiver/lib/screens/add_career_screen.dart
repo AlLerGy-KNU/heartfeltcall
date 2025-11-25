@@ -28,6 +28,7 @@ class _AddCareerScreenState extends State<AddCareerScreen> {
 
   late final ApiClient _apiClient;
   late final DependentService _dependentService;
+  late final InvitationService _invitationService;
 
   // click stat
   bool _isSubmitting = false;
@@ -40,6 +41,7 @@ class _AddCareerScreenState extends State<AddCareerScreen> {
     super.initState();
     _apiClient = ApiClient();
     _dependentService = DependentService(_apiClient);
+    _invitationService = InvitationService(_apiClient);
   }
 
   @override
@@ -102,6 +104,11 @@ class _AddCareerScreenState extends State<AddCareerScreen> {
 
     if (resp["status"] == 200 || resp["status"] == 201) {
       // success
+      // TODO: call connection code API
+      int connectStat = await connect(resp["data"]);
+
+      if (connectStat != 200) return;
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const MainScreen()),
@@ -111,6 +118,18 @@ class _AddCareerScreenState extends State<AddCareerScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(msg)),
       );
+    }
+  }
+
+  Future<int> connect(final data) async {
+    try {
+      final resp = await _invitationService.acceptConnection(
+        code: _codeCtrl.text,
+        dependentId: data["id"]
+      );
+      return resp["status"];
+    } catch (e) {
+      return 500;
     }
   }
   
@@ -127,10 +146,18 @@ class _AddCareerScreenState extends State<AddCareerScreen> {
             children: [
               Text("피보호자의 정보를 \n입력해주세요", style: Theme.of(context).textTheme.titleLarge,),
               SizedBox(height: Other.gapM,),  
-              
+              Text("피보호자 연결코드", style: Theme.of(context).textTheme.titleSmall,),
+              TextFormField(
+                controller: _codeCtrl,
+                decoration: const InputDecoration(
+                  labelText: '연결코드 *',
+                  hintText: '연결코드를 입력해주세요',
+                ),
+              ),
               SizedBox(height: Other.gapM,),  
               Text("피보호자 인적사항", style: Theme.of(context).textTheme.titleSmall,),
               TextFormField(
+                controller: _nameCtrl,
                 decoration: const InputDecoration(
                   labelText: '이름 *',
                   hintText: '이름을 입력해주세요',
@@ -141,6 +168,7 @@ class _AddCareerScreenState extends State<AddCareerScreen> {
                 children: [
                   Expanded(
                     child: TextFormField(
+                      controller: _birthCtrl,
                       keyboardType: TextInputType.number,
                       decoration: const InputDecoration(
                         labelText: '생년월일 *',
@@ -160,7 +188,7 @@ class _AddCareerScreenState extends State<AddCareerScreen> {
                     dropdownMenuEntries: [
                       DropdownMenuEntry(value: 'M', label: '남'),
                       DropdownMenuEntry(value: 'F', label: '여'),
-                      DropdownMenuEntry(value: 'O', label: '기타         '),
+                      DropdownMenuEntry(value: 'O', label: '기타            '),
                     ],
                   ),
                 ],
@@ -168,6 +196,7 @@ class _AddCareerScreenState extends State<AddCareerScreen> {
               
               SizedBox(height: Other.gapS,),  
               TextFormField(
+                controller: _relationCtrl,
                 decoration: const InputDecoration(
                   labelText: '관계',
                   hintText: '부모님',
@@ -176,6 +205,7 @@ class _AddCareerScreenState extends State<AddCareerScreen> {
               SizedBox(height: Other.gapM,),  
               Text("전화 설정", style: Theme.of(context).textTheme.titleSmall,),
               TextFormField(
+                controller: _callTimeCtrl,
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
                   labelText: '통화시각 *',
@@ -184,6 +214,7 @@ class _AddCareerScreenState extends State<AddCareerScreen> {
               ),
               SizedBox(height: Other.gapS,),  
               TextFormField(
+                controller: _callRetryCtrl,
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
                   labelText: '통화 시도횟수 *',
@@ -192,6 +223,7 @@ class _AddCareerScreenState extends State<AddCareerScreen> {
               ),
               SizedBox(height: Other.gapS,),  
               TextFormField(
+                controller: _callIntervalCtrl,
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
                   labelText: '통화 시도간격 *',

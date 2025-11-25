@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:memorion/const/other.dart';
 import 'package:memorion/const/value_name.dart';
 import 'package:memorion/screens/init_screen.dart';
+import 'package:memorion/services/api_client.dart';
 import 'package:memorion/services/local_data_manager.dart';
 
 import '../const/colors.dart';
@@ -16,6 +17,7 @@ class SettingScreen extends StatefulWidget {
 class _SettingScreenState extends State<SettingScreen> {
   // service
   late LocalDataManager localDataManager;
+  late ApiClient _apiClient;
 
   // local value
   late int fontSize;
@@ -25,6 +27,7 @@ class _SettingScreenState extends State<SettingScreen> {
   void initState() {
     super.initState();
     localDataManager = LocalDataManager();
+    _apiClient = ApiClient();
     loadSetting();
   }
 
@@ -34,18 +37,25 @@ class _SettingScreenState extends State<SettingScreen> {
   }
 
   void loadSetting() async {
-    isConnection = (await localDataManager.getBoolData(ValueName.isConnection))!;
-    fontSize = (await localDataManager.getIntData(ValueName.fontSize))!;
+    isConnection = LocalDataManager.getBoolData(ValueName.isConnection)!;
+    fontSize = LocalDataManager.getIntData(ValueName.fontSize)!;
   }
 
   void saveSetting() async {
     // service connect
-    localDataManager.setBoolData(ValueName.isConnection, isConnection);
-    localDataManager.setIntData(ValueName.fontSize, fontSize);
+    LocalDataManager.setBoolData(ValueName.isConnection, isConnection);
+    LocalDataManager.setIntData(ValueName.fontSize, fontSize);
   }
 
   void disconnect() {
-    // disconnect post
+    _apiClient.clearToken();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => InitScreen()),
+    );
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("보호자와 연결이 끊어졌습니다")),
+    );
     saveSetting();
   }
 
@@ -78,15 +88,7 @@ class _SettingScreenState extends State<SettingScreen> {
                 children: [
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: ()=>{
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (_) => InitScreen()),
-                        ),
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text("보호자와 연결이 끊어졌습니다")),
-                        )
-                      },
+                      onPressed: disconnect,
                       style: Theme.of(context).elevatedButtonTheme.style?.copyWith(
                         padding: WidgetStatePropertyAll(EdgeInsets.all(8))
                       ),

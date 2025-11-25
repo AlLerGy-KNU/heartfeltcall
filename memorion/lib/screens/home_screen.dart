@@ -5,6 +5,8 @@ import 'package:memorion/const/other.dart';
 import 'package:memorion/screens/call_screen.dart';
 import 'package:memorion/screens/calling_screen.dart';
 import 'package:memorion/screens/setting_screen.dart';
+import 'package:memorion/services/api_client.dart';
+import 'package:memorion/services/voice_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -14,6 +16,24 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  late ApiClient _apiClient;
+
+  String? name;
+
+  @override
+  void initState() {
+    super.initState();
+    _apiClient = ApiClient();
+  }
+
+  
+  Future<void> getUserData() async {
+    final result = await VoiceService(_apiClient).getCaregiver();
+    if (result["status"] == 200) {
+      final caregiver = result["data"]["caregiver"];
+      name = caregiver["name"];
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,11 +56,12 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               SizedBox(height: Other.gapM,),
               Text(
-                "안녕하세요,\n따듯한 오늘을 기록해봐요!",
+                "안녕하세요,\n따듯한 오늘을 기록해요",
               ),
               Spacer(),
               Text(
-                "보호자와 연결되었어요.",
+                name != null ?
+                "$name님과 연결되었어요." : "보호자와 연결되었어요",
               ),              
             ],
           ),
@@ -52,14 +73,14 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisSize: MainAxisSize.max,
           children: [
             Expanded(
-              child: ElevatedButton(onPressed: showIncomingCallLikeNotification, child: Text("통화\n하기"))
+              child: ElevatedButton(onPressed: test10sCall, child: Text("통화\n하기"))
             ),
             SizedBox(width: Other.gapS,),
             Expanded(
               child: ElevatedButton(
                 onPressed: ()=>{
                   Navigator.push(context, MaterialPageRoute(
-                    builder: (context) => SettingScreen()
+                    builder: (context) => CallingScreen()
                   ))
                 },
                 style: Theme.of(context).elevatedButtonTheme.style?.copyWith(

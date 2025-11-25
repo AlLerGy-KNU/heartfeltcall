@@ -57,17 +57,23 @@ class _ReportScreenState extends State<ReportScreen> {
 
                       ),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Text("먼저 어르신의 통화 음성을 이미지로 변환해요! ", style: Theme.of(context).textTheme.bodyMedium),
                           Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text("먼저 어르신의 통화 음성을 이미지로 변환해요! ", style: Theme.of(context).textTheme.bodyMedium),
+                            ],
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Padding(
                                 padding: EdgeInsets.all(Other.gapSS),
                                 child: ClipRRect(
                                   borderRadius: BorderRadiusGeometry.circular(8),
                                   child: Image.asset(
-                                    'assets/images/result.png',
+                                    'assets/images/mel/d02.png',
                                     fit: BoxFit.cover,
                                   ),
                                 ),
@@ -78,16 +84,22 @@ class _ReportScreenState extends State<ReportScreen> {
                           ),
                           
                           SizedBox(height: Other.gapS,),
-                          Text("이후, 이미지를 AI로 분석해서 위험 증상이 있는지 확인합니다. ", style: Theme.of(context).textTheme.bodyMedium),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text("이후, 이미지를 AI로 분석해서 위험 증상이 있는지 확인합니다. ", style: Theme.of(context).textTheme.bodyMedium),
+                            ],
+                          ),
                           SizedBox(height: Other.gapS,),
                           Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Padding(
                                 padding: EdgeInsets.all(Other.gapSS),
                                 child: ClipRRect(
                                   borderRadius: BorderRadiusGeometry.circular(8),
                                   child: Image.asset(
-                                    'assets/images/ok_result.png',
+                                    'assets/images/mel/d01.png',
                                     fit: BoxFit.cover,
                                   ),
                                 ),
@@ -104,7 +116,7 @@ class _ReportScreenState extends State<ReportScreen> {
                                 child: ClipRRect(
                                   borderRadius: BorderRadiusGeometry.circular(8),
                                   child: Image.asset(
-                                    'assets/images/alt_result.png',
+                                    'assets/images/mel/e01.png',
                                     fit: BoxFit.cover,
                                   ),
                                 ),
@@ -114,8 +126,14 @@ class _ReportScreenState extends State<ReportScreen> {
                           ),
                           
                           SizedBox(height: Other.gapS,),
-                          Text("AI는 89.33%의 정확도를 가졌어요", style: Theme.of(context).textTheme.bodyMedium),
-                          Text("예측 결과에서 높은 위험도를 보이면 전문의와 상담을 하세요", style: Theme.of(context).textTheme.bodyMedium),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text("AI는 89.33%의 정확도를 가졌어요", style: Theme.of(context).textTheme.bodyMedium),
+                              Text("예측 결과에서 높은 위험도를 보이면 전문의와 상담을 하세요", style: Theme.of(context).textTheme.bodyMedium),
+                            ],
+                          ),
+                          
                         ],
                       )),
                   ],

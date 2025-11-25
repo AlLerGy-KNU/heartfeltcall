@@ -21,6 +21,7 @@ class _InitScreenState extends State<InitScreen> {
   //service
   late LocalDataManager localDataManager;
   late ApiClient _apiClient;
+  late InvitationService invitationService;
   
   // click stat
   bool _isCreateCode = false;
@@ -49,10 +50,49 @@ class _InitScreenState extends State<InitScreen> {
   @override
   void initState() {
     super.initState();
-    LocalDataManager.initData();
+    LocalDataManager.init();
     localDataManager = LocalDataManager();
 
     _apiClient = ApiClient();
+    invitationService = InvitationService(_apiClient);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final token = _apiClient.accessToken;
+
+      // 1. If no token → go to login/init page
+      if (token == null || token.isEmpty) {
+        return;
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const HomeScreen()),
+        );
+      }
+
+      // TODO: 토큰 재검증
+      // try {
+      //   // 2. Send GET /auth/me to verify token
+      //   final result = await AuthService(_apiClient).getMe();
+
+      //   if (!mounted) return;
+
+      //   // 3. If token is valid → status 200
+      //   if (result["status"] == 200) {
+      //     Navigator.pushReplacement(
+      //       context,
+      //       MaterialPageRoute(builder: (_) => const HomeScreen()),
+      //     );
+      //   } else {
+      //     // 4. Invalid token → clear token & go InitScreen
+      //     _apiClient.clearToken();
+      //   }
+      // } catch (e) {
+      //   // 5. Any error → treat as invalid token
+      //   _apiClient.clearToken();
+
+      //   if (!mounted) return;
+      // }
+    });
   }
 
   @override
@@ -61,6 +101,12 @@ class _InitScreenState extends State<InitScreen> {
   }
 
   Future<void> _createCode() async {
+    // if (true) {
+    //   Navigator.of(context).pushAndRemoveUntil(
+    //     MaterialPageRoute(builder: (_) => const HomeScreen()),
+    //     (Route<dynamic> route) => false,
+    //   ); 
+    // }
     // If we already have a valid code → block
     if (code != null && expiresAt != null) {
       final now = DateTime.now().toUtc();
@@ -118,10 +164,11 @@ class _InitScreenState extends State<InitScreen> {
       _remaining = expireTime.difference(DateTime.now().toUtc());
     });
 
-    await shareMessage();
+    
 
     _startCountdown();
     _startStatusPolling();
+    await shareMessage();
   }
 
   Future<void> shareMessage() async {
@@ -141,6 +188,9 @@ class _InitScreenState extends State<InitScreen> {
       final now = DateTime.now().toUtc();
       final expire = expiresAt!;
       final diff = expire.difference(now);
+      print(diff.inSeconds);
+      print(expire);
+      print(now);
 
       if (!mounted) {
         timer.cancel();
@@ -148,6 +198,7 @@ class _InitScreenState extends State<InitScreen> {
       }
 
       if (diff.inSeconds <= 0) {
+        print("DEBUG: check");
         // expire
         timer.cancel();
         setState(() {
@@ -169,8 +220,8 @@ class _InitScreenState extends State<InitScreen> {
     if (code == null) return;
 
     _statusTimer = Timer.periodic(const Duration(seconds: 2), (_) async {
-      final result = await InvitationService(_apiClient)
-          .getInvitationStatus(code: code!);
+      final result = await 
+          invitationService.getInvitationStatus(code: code!);
 
       if (!mounted) return;
 
@@ -181,6 +232,8 @@ class _InitScreenState extends State<InitScreen> {
       final data = result["data"];
       final status = data["status"] as String;
 
+      if (!mounted) return;
+
       setState(() {
         _inviteStatus = status;
       });
@@ -188,10 +241,25 @@ class _InitScreenState extends State<InitScreen> {
       // 1) 인증 완료
       if (status == "connected") {
         _statusTimer?.cancel();
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const HomeScreen()),
-          (Route<dynamic> route) => false,
-        ); 
+        
+        // Extract access token from response JSON
+        final String? authCode = data["auth_code"] as String?;
+
+        if (authCode != null && authCode.isNotEmpty) {
+          // Save token to local storage
+          final resp = await invitationService.exchangeDependentToken(code: code!, authCode: authCode);
+          if (resp["status"] == 200) {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (_) => const HomeScreen()),
+              (Route<dynamic> route) => false,
+            ); 
+          } else {
+            final msg = resp["message"]?.toString() ?? "로그인에 실패했습니다.";
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(msg)),
+            );
+          }
+        }
       }
 
       // 2) 만료된 경우

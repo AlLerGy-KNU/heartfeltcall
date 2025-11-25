@@ -44,12 +44,12 @@ class _EditCareerScreenState extends State<EditCareerScreen> {
     _apiClient = ApiClient();
     _dependentService = DependentService(_apiClient);
 
-    _nameCtrl.text = widget.item["name"] ?? "";
-    _birthCtrl.text = widget.item["birth_date"] ?? "";
-    _relationCtrl.text = widget.item["relation"] ?? "";
-    _callTimeCtrl.text = widget.item["preferred_call_time"] ?? "";
-    _callRetryCtrl.text = widget.item["retry_count"] ?? "";
-    _callIntervalCtrl.text = widget.item["retry_interval_min"] ?? "";
+    _nameCtrl.text = widget.item["name"];
+    _birthCtrl.text = widget.item["birth_date"];
+    _relationCtrl.text = widget.item["relation"];
+    _callTimeCtrl.text = widget.item["preferred_call_time"];
+    _callRetryCtrl.text = widget.item["retry_count"].toString();
+    _callIntervalCtrl.text = widget.item["retry_interval_min"].toString();
     gender = widget.item["sex"] ?? "M";
   }
 

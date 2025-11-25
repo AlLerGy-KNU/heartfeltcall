@@ -29,7 +29,7 @@ flutter:
     - assets/images/ok_result.png
     - assets/images/alt_result.png
     - assets/images/test_result.png
-    - assets/images/mel-img/*
+    - assets/images/mel/
     - .env
   fonts:
     - family: Pretendard

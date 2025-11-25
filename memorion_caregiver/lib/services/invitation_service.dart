@@ -127,30 +127,6 @@ class InvitationService {
         body["dependent_id"] = dependentId;
       }
 
-      // new dependent info
-      final Map<String, dynamic> dependent = {};
-
-      if (dependentName != null) {
-        dependent["name"] = dependentName;
-      }
-      if (birthDate != null) {
-        dependent["birth_date"] = birthDate;
-      }
-      if (relation != null) {
-        dependent["relation"] = relation;
-      }
-      if (preferredCallTime != null) {
-        dependent["preferred_call_time"] = preferredCallTime;
-      }
-      if (retryIntervalMin != null) {
-        dependent["retry_interval_min"] = retryIntervalMin;
-      }
-
-      // attach dependent only if not empty
-      if (dependent.isNotEmpty) {
-        body["dependent"] = dependent;
-      }
-
       final http.Response resp = await client.post(
         "/connections/accept",
         body,

@@ -167,7 +167,7 @@ Future<void> scheduleCallSeries(
 
     await flutterLocalNotificationsPlugin.zonedSchedule(
       notificationId,
-      '보호자 전화',
+      '따듯한 전화',
       '통화를 시작하려면 탭하세요',
       attemptTime,
       details,
@@ -200,8 +200,8 @@ Future<void> test10sCall() async {
 
   await flutterLocalNotificationsPlugin.zonedSchedule(
     9000,
-    '테스트 전화',
-    '받으려면 탭하세요',
+    '따듯한 전화',
+    '통화를 시작하려면 탭하세요',
     tzWhen,
     details,
     androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
