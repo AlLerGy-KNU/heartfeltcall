@@ -47,7 +47,8 @@
 - SQLAlchemy >= 2.0.36
 - MySQL (pymysql)
 - JWT 인증 (python-jose, passlib)
-- OpenAI TTS (선택사항)
+- Google Cloud TTS (질문 음성 생성)
+- Gemini 2.5 Flash (질문 생성 LLM)
 
 ### AI 분석 서비스 (ai)
 - TensorFlow 2.15.0
@@ -66,10 +67,11 @@
 
 | 구성요소 | 버전 | 비고 |
 |---------|------|------|
-| Python | 3.10 ~ 3.12 | ⚠️ 3.13은 numpy/tensorflow 호환 문제 |
+| Python | 3.10 ~ 3.13 | 3.13도 지원 |
 | Flutter SDK | 3.38+ | Dart 3.10+ 필요 |
 | MySQL | 8.0+ | 8.4 권장 |
-| (선택) OpenAI API Key | - | TTS 기능용 |
+| Google Cloud 서비스 계정 | - | TTS용 (질문 음성 생성) |
+| Gemini API Key | - | 질문 생성 LLM용 |
 
 ### 2. MySQL 설치 및 설정
 
@@ -124,7 +126,16 @@ MEDIA_ROOT=./media
 QUESTIONS_ROOT=q
 AI_SERVICE_URL=http://localhost:8001
 DAILY_QUESTIONS_COUNT=3
-GOOGLE_TTS_ENABLED=false
+
+# Google Cloud TTS (질문 음성 생성)
+GOOGLE_TTS_ENABLED=true
+GOOGLE_TTS_LANGUAGE=ko-KR
+GOOGLE_TTS_VOICE=ko-KR-Wavenet-A
+GOOGLE_APPLICATION_CREDENTIALS=./service-account.json
+
+# Gemini LLM (질문 생성)
+GEMINI_API_KEY=your-gemini-api-key
+GEMINI_MODEL=gemini-2.5-flash
 EOF
 
 # 개발 서버 실행
@@ -430,7 +441,10 @@ heartfeltcall/
 | `DATABASE_URL` | MySQL 연결 문자열 | mysql+pymysql://user:pass@host/db |
 | `MEDIA_ROOT` | 미디어 저장 경로 | ./media |
 | `AI_SERVICE_URL` | AI 서비스 URL | http://localhost:8001 |
-| `OPENAI_API_KEY` | OpenAI API 키 (선택) | sk-... |
+| `GOOGLE_TTS_ENABLED` | Google Cloud TTS 활성화 | true |
+| `GOOGLE_APPLICATION_CREDENTIALS` | GCP 서비스 계정 키 경로 | ./service-account.json |
+| `GEMINI_API_KEY` | Gemini API 키 | your-api-key |
+| `GEMINI_MODEL` | Gemini 모델명 | gemini-2.5-flash |
 
 ### Flutter 앱 (.env)
 | 변수 | 설명 | 예시 |

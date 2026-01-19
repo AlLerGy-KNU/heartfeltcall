@@ -74,7 +74,7 @@ def accept_invitation(
         dep = Dependent(
             name=name,
             birth_date=info.get("birth_date"),
-            relation=info.get("relation"),
+            sex=info.get("sex", "U"),
             preferred_call_time=info.get("preferred_call_time"),
             retry_interval_min=info.get("retry_interval_min"),
             caregiver_id=current_user.id
