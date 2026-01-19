@@ -5,20 +5,22 @@ import 'package:path_provider/path_provider.dart';
 class VoiceRecorderService {
   final AudioRecorder _recorder = AudioRecorder();
   bool _isRecording = false;
+  int _recordingIndex = 0;
 
-  Future<String> _tempPath() async {
+  Future<String> _tempPath([String? customName]) async {
     final dir = await getTemporaryDirectory();
-    return '${dir.path}/question.wav';
+    final filename = customName ?? 'recording_${_recordingIndex++}_${DateTime.now().millisecondsSinceEpoch}.wav';
+    return '${dir.path}/$filename';
   }
 
-  Future<void> start() async {
+  Future<void> start([String? customFileName]) async {
     if (_isRecording) {
       // Already recording
       return;
     }
 
     if (await _recorder.hasPermission()) {
-      final path = await _tempPath();
+      final path = await _tempPath(customFileName);
       await _recorder.start(
         const RecordConfig(
           encoder: AudioEncoder.wav,

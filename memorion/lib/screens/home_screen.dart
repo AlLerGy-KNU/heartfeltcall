@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:memorion/const/colors.dart';
 import 'package:memorion/const/other.dart';
-import 'package:memorion/screens/call_screen.dart';
 import 'package:memorion/screens/calling_screen.dart';
 import 'package:memorion/screens/setting_screen.dart';
 import 'package:memorion/services/api_client.dart';
@@ -73,15 +72,22 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisSize: MainAxisSize.max,
           children: [
             Expanded(
-              child: ElevatedButton(onPressed: test10sCall, child: Text("통화\n하기"))
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(context, MaterialPageRoute(
+                    builder: (context) => const CallingScreen()
+                  ));
+                },
+                child: Text("통화\n하기"),
+              )
             ),
             SizedBox(width: Other.gapS,),
             Expanded(
               child: ElevatedButton(
-                onPressed: ()=>{
+                onPressed: () {
                   Navigator.push(context, MaterialPageRoute(
-                    builder: (context) => CallingScreen()
-                  ))
+                    builder: (context) => const SettingScreen()
+                  ));
                 },
                 style: Theme.of(context).elevatedButtonTheme.style?.copyWith(
                   backgroundColor: WidgetStatePropertyAll(AppColors.whiteGray),
