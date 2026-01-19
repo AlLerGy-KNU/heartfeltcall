@@ -247,9 +247,10 @@ class _InitScreenState extends State<InitScreen> {
 
     if (code == null) return;
 
+    final normalizedCode = code!.toUpperCase();
     _statusTimer = Timer.periodic(const Duration(seconds: 2), (_) async {
       final result = await
-          invitationService.getInvitationStatus(code: code!);
+          invitationService.getInvitationStatus(code: normalizedCode);
 
       if (!mounted) return;
 
@@ -286,7 +287,7 @@ class _InitScreenState extends State<InitScreen> {
 
         if (authCode != null && authCode.isNotEmpty) {
           // Save token to local storage
-          final resp = await invitationService.exchangeDependentToken(code: code!, authCode: authCode);
+          final resp = await invitationService.exchangeDependentToken(code: normalizedCode, authCode: authCode);
           if (resp["status"] == 200) {
             Navigator.of(context).pushAndRemoveUntil(
               MaterialPageRoute(builder: (_) => const HomeScreen()),

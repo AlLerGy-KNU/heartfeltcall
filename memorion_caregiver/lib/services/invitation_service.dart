@@ -118,8 +118,9 @@ class InvitationService {
     int? retryIntervalMin,
   }) async {
     try {
+      final normalizedCode = code.trim().toUpperCase();
       final Map<String, dynamic> body = {
-        "code": code,
+        "code": normalizedCode,
       };
 
       // existing dependent
