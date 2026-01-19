@@ -134,7 +134,7 @@ async def load_and_test_models(base_path, mel_paths: Optional[List[str]] = None)
         import h5py
 
         # 모델 로딩 설정 (환경변수로 경로 지정 가능)
-        mci_model_path = os.getenv('MCI_MODEL_PATH', 'models/MCIvsADModel_68.7.h5')
+        mci_model_path = os.getenv('MCI_MODEL_PATH', 'save_model_72.7.h5')
         model_paths = [
             ('MCIvsAD', mci_model_path),
         ]

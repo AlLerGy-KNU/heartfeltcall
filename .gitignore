@@ -506,3 +506,5 @@ fabric.properties
 
 ### flutter lib add
 !memorion*/lib/
+# AI models (too large for GitHub)
+ai/*.h5

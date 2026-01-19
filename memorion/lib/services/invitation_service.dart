@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:memorion/services/api_client.dart';
 import 'package:memorion/services/local_data_manager.dart';
@@ -8,6 +10,42 @@ class InvitationService {
   final ApiClient client;
 
   InvitationService(this.client);
+
+  /// JSON 안전하게 디코딩
+  Map<String, dynamic> _safeJsonDecode(String body) {
+    if (body.isEmpty) return <String, dynamic>{};
+    try {
+      final decoded = json.decode(body);
+      if (decoded is Map<String, dynamic>) {
+        return decoded;
+      }
+      return <String, dynamic>{"data": decoded};
+    } catch (_) {
+      return <String, dynamic>{};
+    }
+  }
+
+  /// 예외를 사용자 친화적 메시지로 변환
+  Map<String, dynamic> _handleException(dynamic e) {
+    String userMessage;
+
+    if (e is TimeoutException) {
+      userMessage = "서버가 응답하지 않습니다. 잠시 후 다시 시도해주세요.";
+    } else if (e is SocketException) {
+      userMessage = "인터넷 연결을 확인해주세요.";
+    } else if (e is http.ClientException) {
+      userMessage = "서버에 연결할 수 없습니다.";
+    } else {
+      userMessage = "알 수 없는 오류가 발생했습니다.";
+    }
+
+    return {
+      "message": "error: $e",
+      "userMessage": userMessage,
+      "status": 0,
+      "isNetworkError": true,
+    };
+  }
 
   /// 1) POST /connections
   /// Create invitation code (15 minutes valid)
@@ -21,10 +59,9 @@ class InvitationService {
         useAuth: false, // public endpoint
       );
 
-      if (resp.statusCode == 200) {
-        final Map<String, dynamic> data =
-            resp.body.isNotEmpty ? json.decode(resp.body) : <String, dynamic>{};
+      final Map<String, dynamic> data = _safeJsonDecode(resp.body);
 
+      if (resp.statusCode == 200) {
         return {
           "message": "invitation created",
           "status": resp.statusCode,
@@ -32,15 +69,13 @@ class InvitationService {
         };
       } else {
         return {
-          "message": "failed to create invitation: ${resp.body}",
+          "message": data["detail"] ?? "failed to create invitation",
+          "userMessage": "연결 코드 생성에 실패했습니다.",
           "status": resp.statusCode,
         };
       }
     } catch (e) {
-      return {
-        "message": "error: $e",
-        "status": 500,
-      };
+      return _handleException(e);
     }
   }
 
@@ -57,10 +92,9 @@ class InvitationService {
         useAuth: false, // public endpoint
       );
 
-      if (resp.statusCode == 200) {
-        final Map<String, dynamic> data =
-            resp.body.isNotEmpty ? json.decode(resp.body) : <String, dynamic>{};
+      final Map<String, dynamic> data = _safeJsonDecode(resp.body);
 
+      if (resp.statusCode == 200) {
         return {
           "message": "status fetched",
           "status": resp.statusCode,
@@ -68,15 +102,13 @@ class InvitationService {
         };
       } else {
         return {
-          "message": "failed to fetch status: ${resp.body}",
+          "message": data["detail"] ?? "failed to fetch status",
+          "userMessage": "상태 확인에 실패했습니다.",
           "status": resp.statusCode,
         };
       }
     } catch (e) {
-      return {
-        "message": "error: $e",
-        "status": 500,
-      };
+      return _handleException(e);
     }
   }
 
@@ -104,9 +136,9 @@ class InvitationService {
         useAuth: false, // public endpoint
       );
 
+      final Map<String, dynamic> data = _safeJsonDecode(resp.body);
+
       if (resp.statusCode == 200) {
-        final Map<String, dynamic> data =
-            resp.body.isNotEmpty ? json.decode(resp.body) : <String, dynamic>{};
         // Extract access token from response JSON
         final String? accessToken = data["access_token"] as String?;
 
@@ -122,15 +154,13 @@ class InvitationService {
       } else {
         // 400 / 401 / 409 etc
         return {
-          "message": "exchange failed: ${resp.body}",
+          "message": data["detail"] ?? "exchange failed",
+          "userMessage": "인증에 실패했습니다. 다시 시도해주세요.",
           "status": resp.statusCode,
         };
       }
     } catch (e) {
-      return {
-        "message": "error: $e",
-        "status": 500,
-      };
+      return _handleException(e);
     }
   }
 }

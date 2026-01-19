@@ -22,10 +22,10 @@ class _InitScreenState extends State<InitScreen> {
   late LocalDataManager localDataManager;
   late ApiClient _apiClient;
   late InvitationService invitationService;
-  
+
   // click stat
   bool _isCreateCode = false;
-  
+
   // code init
   String? code;
   DateTime? expiresAt;
@@ -35,6 +35,11 @@ class _InitScreenState extends State<InitScreen> {
 
   Timer? _statusTimer;
   String _inviteStatus = "pending"; // pending | connected | expired | used
+
+  // 네트워크 에러 추적
+  int _consecutiveErrors = 0;
+  static const int _maxConsecutiveErrors = 3;
+  bool _showingNetworkError = false;
 
   String get _remainingText {
     if (code == null || expiresAt == null || _remaining.inSeconds <= 0) {
@@ -136,9 +141,10 @@ class _InitScreenState extends State<InitScreen> {
 
     // === Error case ===
     if (result["status"] != 200) {
-      // Show error snackbar or dialog
+      // 사용자 친화적 메시지 우선 사용
+      final errorMsg = result["userMessage"] ?? result["message"] ?? "연결 코드 생성에 실패했습니다.";
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed: ${result["message"]}")),
+        SnackBar(content: Text(errorMsg)),
       );
       return;
     }
@@ -213,21 +219,54 @@ class _InitScreenState extends State<InitScreen> {
     });
   }
   
+  void _showNetworkErrorSnackbar(String message) {
+    if (_showingNetworkError) return;
+    _showingNetworkError = true;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(seconds: 3),
+        action: SnackBarAction(
+          label: "다시 시도",
+          onPressed: () {
+            _consecutiveErrors = 0;
+            _showingNetworkError = false;
+          },
+        ),
+      ),
+    ).closed.then((_) {
+      _showingNetworkError = false;
+    });
+  }
+
   void _startStatusPolling() {
     // stop existing timer
     _statusTimer?.cancel();
+    _consecutiveErrors = 0;
 
     if (code == null) return;
 
     _statusTimer = Timer.periodic(const Duration(seconds: 2), (_) async {
-      final result = await 
+      final result = await
           invitationService.getInvitationStatus(code: code!);
 
       if (!mounted) return;
 
+      // 네트워크 에러 처리
       if (result["status"] != 200) {
+        _consecutiveErrors++;
+
+        // 연속 에러가 임계값을 초과하면 사용자에게 알림
+        if (_consecutiveErrors >= _maxConsecutiveErrors && !_showingNetworkError) {
+          final errorMsg = result["userMessage"] ?? "서버에 연결할 수 없습니다.";
+          _showNetworkErrorSnackbar(errorMsg);
+        }
         return;
       }
+
+      // 성공 시 에러 카운트 초기화
+      _consecutiveErrors = 0;
 
       final data = result["data"];
       final status = data["status"] as String;
@@ -241,7 +280,7 @@ class _InitScreenState extends State<InitScreen> {
       // 1) 인증 완료
       if (status == "connected") {
         _statusTimer?.cancel();
-        
+
         // Extract access token from response JSON
         final String? authCode = data["auth_code"] as String?;
 
@@ -252,9 +291,9 @@ class _InitScreenState extends State<InitScreen> {
             Navigator.of(context).pushAndRemoveUntil(
               MaterialPageRoute(builder: (_) => const HomeScreen()),
               (Route<dynamic> route) => false,
-            ); 
+            );
           } else {
-            final msg = resp["message"]?.toString() ?? "로그인에 실패했습니다.";
+            final msg = resp["userMessage"] ?? resp["message"]?.toString() ?? "로그인에 실패했습니다.";
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(msg)),
             );
@@ -270,6 +309,10 @@ class _InitScreenState extends State<InitScreen> {
           expiresAt = null;
           _remaining = Duration.zero;
         });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("연결 코드가 만료되었습니다. 다시 생성해주세요.")),
+        );
         return;
       }
 
