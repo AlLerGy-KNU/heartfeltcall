@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from app.api.deps import get_db, get_current_user
+from app.api.deps import get_db, get_current_user, get_current_dependent
 from app.models.invitation import Invitation
 from app.models.dependent import Dependent
 from app.models.user import User
@@ -122,4 +122,20 @@ def exchange_auth_code_for_jwt(payload: dict, db: Session = Depends(get_db)):
         "token_type": "bearer",
         "expires_in": DEPENDENT_JWT_TTL_MIN * 60,
         "dependent_id": inv.dependent_id
+    }
+
+
+# (5) 피보호자앱: 내 프로필 조회 (JWT 필요)
+@router.get("/auth/dependent/me")
+def get_dependent_profile(dep: Dependent = Depends(get_current_dependent)):
+    """피보호자 본인 프로필 반환 (통화 스케줄링용)"""
+    return {
+        "id": dep.id,
+        "name": dep.name,
+        "preferred_call_time": dep.preferred_call_time,  # "HH:MM" 형식
+        "retry_count": dep.retry_count,
+        "retry_interval_min": dep.retry_interval_min,
+        "last_state": dep.last_state,
+        "last_exam_at": dep.last_exam_at.isoformat() if dep.last_exam_at else None,
+        "caregiver_name": dep.caregiver.name if dep.caregiver else None,
     }

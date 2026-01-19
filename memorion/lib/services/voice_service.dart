@@ -76,4 +76,35 @@ class VoiceService {
       return _handleException(e);
     }
   }
+
+  /// GET /auth/dependent/me
+  /// 피보호자 본인 프로필 조회 (통화 스케줄링용)
+  /// Header: Authorization: Bearer dependentToken
+  /// Response(200): { id, name, preferred_call_time, retry_count, retry_interval_min, ... }
+  Future<Map<String, dynamic>> getMyProfile() async {
+    try {
+      final http.Response resp = await client.get(
+        "/auth/dependent/me",
+        useAuth: true,
+      );
+
+      final Map<String, dynamic> data = _safeJsonDecode(resp.body);
+
+      if (resp.statusCode == 200) {
+        return {
+          "message": "profile fetched",
+          "status": resp.statusCode,
+          "data": data,
+        };
+      } else {
+        return {
+          "message": data["detail"] ?? "failed to fetch profile",
+          "userMessage": "프로필을 가져오는데 실패했습니다.",
+          "status": resp.statusCode,
+        };
+      }
+    } catch (e) {
+      return _handleException(e);
+    }
+  }
 }

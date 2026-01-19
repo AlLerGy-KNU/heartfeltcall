@@ -63,17 +63,40 @@
 ## 설치 및 실행
 
 ### 1. 사전 요구사항
-- Python 3.10+
-- Flutter SDK 3.8+
-- MySQL 8.0+
-- (선택) OpenAI API Key
 
-### 2. 데이터베이스 설정
+| 구성요소 | 버전 | 비고 |
+|---------|------|------|
+| Python | 3.10 ~ 3.12 | ⚠️ 3.13은 numpy/tensorflow 호환 문제 |
+| Flutter SDK | 3.38+ | Dart 3.10+ 필요 |
+| MySQL | 8.0+ | 8.4 권장 |
+| (선택) OpenAI API Key | - | TTS 기능용 |
+
+### 2. MySQL 설치 및 설정
+
+#### Windows (winget)
 ```bash
+# MySQL 설치
+winget install Oracle.MySQL
+
+# 데이터 디렉토리 초기화 (Program Files 권한 문제 시)
+mkdir C:\mysql_data
+"C:\Program Files\MySQL\MySQL Server 8.4\bin\mysqld" --initialize-insecure --datadir="C:/mysql_data"
+
+# MySQL 서버 실행
+"C:\Program Files\MySQL\MySQL Server 8.4\bin\mysqld" --datadir="C:/mysql_data" --console
+
+# 다른 터미널에서 데이터베이스 생성
+"C:\Program Files\MySQL\MySQL Server 8.4\bin\mysql" -u root -e "CREATE DATABASE IF NOT EXISTS heartfeltcall DEFAULT CHARACTER SET utf8mb4; CREATE USER IF NOT EXISTS 'castberry'@'%' IDENTIFIED BY 'qhdks'; GRANT ALL PRIVILEGES ON heartfeltcall.* TO 'castberry'@'%'; FLUSH PRIVILEGES;"
+```
+
+#### Linux/Mac
+```bash
+# MySQL 설치 후
 mysql -u root -p < db/create.sql
 ```
 
 ### 3. 백엔드 서버 설정 및 실행
+
 ```bash
 cd newserver
 
@@ -81,61 +104,181 @@ cd newserver
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 
-# 패키지 설치
-pip install -r requirements.txt
+# 핵심 패키지 설치 (requirements.txt의 tensorflow 제외)
+pip install fastapi "uvicorn[standard]" SQLAlchemy pymysql python-dotenv "passlib[bcrypt]" "python-jose[cryptography]" pydantic pydantic-settings httpx openai google-cloud-texttospeech
 
-# 환경변수 설정 (.env 파일 생성)
-cat > .env << EOF
+# ⚠️ 중요: 추가 패키지 설치 (requirements.txt에 누락됨)
+pip install email-validator python-multipart
+
+# ⚠️ bcrypt 호환성 문제 해결 (passlib와 bcrypt 5.0 충돌)
+pip install "bcrypt<5.0.0"
+
+# .env 파일 생성
+cat > .env << 'EOF'
 APP_ENV=development
-SECRET_KEY=your-secret-key-min-32-chars
+SECRET_KEY=your-secret-key-change-in-production
 ACCESS_TOKEN_EXPIRE_MINUTES=1440
 ALGORITHM=HS256
-DATABASE_URL=mysql+pymysql://castberry:qhdks@localhost/heartfeltcall
+DATABASE_URL=mysql+pymysql://castberry:qhdks@localhost:3306/heartfeltcall
 MEDIA_ROOT=./media
-AI_SERVICE_URL=http://localhost:8001
 QUESTIONS_ROOT=q
+AI_SERVICE_URL=http://localhost:8001
+DAILY_QUESTIONS_COUNT=3
+GOOGLE_TTS_ENABLED=false
 EOF
 
 # 개발 서버 실행
-./run.sh
-# 또는: uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --reload --port 8000
+
+# 서버 확인
+curl http://localhost:8000/system/health
+# 응답: {"status":"ok"}
 ```
 
 ### 4. AI 분석 서비스 실행
+
+> ⚠️ AI 서비스는 TensorFlow가 필요하며, Python 3.10~3.12에서만 동작합니다.
+
 ```bash
 cd ai
 
 # 패키지 설치
-pip install -r requirements.txt
+pip install tensorflow==2.15.0 librosa==0.10.2.post1 numpy==1.26.4 matplotlib
 
 # 서버 실행
 uvicorn main:app --reload --host 0.0.0.0 --port 8001
 ```
 
-### 5. Flutter 앱 실행
+### 5. Flutter SDK 설치
+
+#### Windows
+```bash
+# 다운로드 및 설치
+curl -L -o flutter.zip https://storage.googleapis.com/flutter_infra_release/releases/stable/windows/flutter_windows_3.24.5-stable.zip
+unzip flutter.zip -d C:\
+rm flutter.zip
+
+# Flutter 업그레이드 (Dart 3.10+ 필요)
+C:\flutter\bin\flutter upgrade
+
+# 환경 확인
+C:\flutter\bin\flutter doctor
+```
+
+#### Mac/Linux
+```bash
+# https://docs.flutter.dev/get-started/install 참조
+```
+
+### 6. Flutter 앱 실행
+
 ```bash
 # 피보호자 앱
 cd memorion
-flutter pub get
 
 # .env 파일 생성
-echo "BASE_URL=http://your-server-ip:8000" > .env
+echo "BASE_URL=http://10.0.2.2:8000" > .env  # Android 에뮬레이터
+# echo "BASE_URL=http://192.168.x.x:8000" > .env  # 실제 기기
 
-flutter run
+flutter pub get
+flutter run -d chrome --web-port=3000  # 웹으로 테스트
+# 또는
+flutter run  # 연결된 기기/에뮬레이터
 
 # 보호자 앱
 cd memorion_caregiver
+echo "BASE_URL=http://10.0.2.2:8000" > .env
 flutter pub get
-echo "BASE_URL=http://your-server-ip:8000" > .env
-flutter run
+flutter run -d chrome --web-port=3001
 ```
 
-### 6. APK 빌드
+### 7. Android Studio 설치 (APK 빌드용)
+
+APK를 빌드하려면 Android SDK가 필요합니다.
+
 ```bash
-cd memorion  # 또는 memorion_caregiver
-flutter build apk
-# 출력: build/app/outputs/flutter-apk/app-release.apk
+# Windows - winget으로 설치
+winget install Google.AndroidStudio
 ```
+
+설치 후:
+1. **Android Studio 실행** → Setup Wizard에서 **Standard** 선택
+2. SDK 설치 완료 대기
+3. **Tools → SDK Manager → SDK Tools** 탭
+4. **Android SDK Command-line Tools (latest)** 체크 후 Apply
+
+```bash
+# Flutter에서 Android 라이선스 수락
+flutter doctor --android-licenses
+# 모든 라이선스에 'y' 입력
+
+# 설정 확인
+flutter doctor
+# Android toolchain 항목이 ✓ 표시되어야 함
+```
+
+### 8. APK 빌드
+
+```bash
+# 피보호자 앱 빌드
+cd memorion
+flutter build apk --release
+# 출력: build/app/outputs/flutter-apk/app-release.apk (약 48MB)
+
+# 보호자 앱 빌드
+cd memorion_caregiver
+flutter build apk --release
+# 출력: build/app/outputs/flutter-apk/app-release.apk (약 54MB)
+```
+
+### 9. 핸드폰에 APK 설치
+
+#### 사전 설정
+핸드폰에서 **설정 → 보안 → 알 수 없는 출처의 앱 설치** 허용
+
+#### 방법 1: USB 케이블로 전송
+1. 핸드폰을 USB로 PC에 연결
+2. 파일 탐색기에서 APK 파일을 핸드폰 내부 저장소로 복사
+3. 핸드폰 파일 관리자에서 APK 실행하여 설치
+
+#### 방법 2: ADB로 설치
+```bash
+# 개발자 옵션 → USB 디버깅 활성화 필요
+adb install memorion/build/app/outputs/flutter-apk/app-release.apk
+adb install memorion_caregiver/build/app/outputs/flutter-apk/app-release.apk
+```
+
+#### 방법 3: 클라우드/메신저
+- Google Drive, 카카오톡 등으로 APK 전송 후 핸드폰에서 다운로드하여 설치
+
+---
+
+## 트러블슈팅
+
+### Python 관련
+
+| 문제 | 해결 |
+|------|------|
+| `numpy` 설치 실패 (Python 3.13) | Python 3.11 또는 3.12 사용 |
+| `bcrypt` 오류 (passlib 관련) | `pip install "bcrypt<5.0.0"` |
+| `email-validator` 없음 | `pip install email-validator` |
+| `python-multipart` 없음 | `pip install python-multipart` |
+
+### MySQL 관련
+
+| 문제 | 해결 |
+|------|------|
+| Permission denied (Windows) | 데이터 디렉토리를 사용자 폴더로 지정 |
+| 서비스 등록 실패 | 관리자 권한 필요 또는 직접 실행 |
+| 연결 거부 | MySQL 서버가 실행 중인지 확인 |
+
+### Flutter 관련
+
+| 문제 | 해결 |
+|------|------|
+| Dart SDK 버전 불일치 | `flutter upgrade` 실행 |
+| Android SDK 없음 | 웹으로 테스트 (`flutter run -d chrome`) |
+| 패키지 충돌 | `flutter clean && flutter pub get` |
 
 ---
 
