@@ -20,26 +20,30 @@ def global_questions_dir() -> str:
     os.makedirs(base, exist_ok=True)
     return base
 
-def _generate_questions_with_gpt(dep_name: str | None = None, lang: str | None = None) -> List[str]:
+def _generate_questions_with_gemini(dep_name: str | None = None) -> List[str]:
     """
-    Generate three daily questions using OpenAI Chat if configured. Returns 3 strings.
+    Generate three daily questions using Google Gemini 2.5 Flash if configured. Returns 3 strings.
     Fallback to DEFAULT_QUESTIONS_KO on failure.
     """
-    model = settings.gpt_questions_model
-    api_key = settings.openai_api_key
+    api_key = settings.gemini_api_key
     if not api_key:
         return DEFAULT_QUESTIONS_KO[:3]
+
     system = (
         "당신은 고령의 사용자와 대화할 상냥한 비서입니다. "
         "일상 대화를 위한 한국어 질문 3개를 생성하세요. 각 질문은 40자 이하, 공손하고 따뜻한 톤. "
         "질문만 출력하고 번호나 불릿 없이 줄바꿈으로 구분하세요."
     )
     user = f"피보호자 이름: {dep_name or ''}"
+
     try:
         from openai import OpenAI
-        client = OpenAI(api_key=api_key, base_url=settings.openai_api_base or None)
+        client = OpenAI(
+            api_key=api_key,
+            base_url=settings.gemini_api_base
+        )
         resp = client.chat.completions.create(
-            model=model,
+            model=settings.gemini_model,
             messages=[
                 {"role": "system", "content": system},
                 {"role": "user", "content": user},
@@ -68,7 +72,7 @@ def ensure_global_questions(questions: List[str] | None = None) -> list[str]:
     need = not all(os.path.exists(p) and os.path.getsize(p) > 0 for p in paths)
     if need:
         if questions is None:
-            questions = _generate_questions_with_gpt(None, settings.gpt_questions_lang)
+            questions = _generate_questions_with_gemini(None)
         for i, text in enumerate((questions or DEFAULT_QUESTIONS_KO)[:count], start=1):
             synthesize_to_wav(text, os.path.join(qdir, f"a{i}.wav"))
     return paths
